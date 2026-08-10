@@ -1,0 +1,81 @@
+{
+  "name": "vscode-clipper",
+  "displayName": "vscode-clipper",
+  "description": "vscode clip to draw.io",
+  "version": "0.1.8",
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:vscode-clipper.clipAndPaste"
+  ],
+  "extensionKind": [
+    "ui"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "vscode-clipper.clipAndPaste",
+        "title": "Clipper: Paste Selection to draw.io"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "vscode-clipper.clipAndPaste",
+        "key": "ctrl+shift+d",
+        "when": "editorTextFocus && editorHasSelection"
+      }
+    ],
+    "configuration": {
+      "title": "VS Code Clipper",
+      "properties": {
+        "vscode-clipper.autoHotkeyPath": {
+          "type": "string",
+          "default": "",
+          "description": "Path to the AutoHotkey v2 executable. Leave empty to use AutoHotkey64.exe from PATH."
+        },
+        "vscode-clipper.drawioExecutable": {
+          "type": "string",
+          "default": "",
+          "description": "Path to draw.io.exe. Used to start draw.io when it is not running."
+        },
+        "vscode-clipper.includeLineNumbers": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include selected line numbers in the pasted path label."
+        },
+        "vscode-clipper.includeWorkspaceFolder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Prefix labels with the workspace folder name."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.125.0",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "24.x",
+    "typescript-eslint": "^8.61.1",
+    "eslint": "^10.5.0",
+    "typescript": "^6.0.3",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0"
+  },
+  "overrides": {
+    "diff": "^8.0.4",
+    "serialize-javascript": "^7.0.6"
+  }
+}
