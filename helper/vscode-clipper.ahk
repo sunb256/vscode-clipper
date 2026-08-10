@@ -30,7 +30,7 @@ PasteIntoDrawio(label, executable) {
     Send("^+a")
     Sleep(100)
     Send("^v")
-    Sleep(500)
+    Sleep(350)
     WinActivate("ahk_id " sourceWindow)
 }
 

@@ -9,7 +9,8 @@ VS Codeで選択したコードをリッチなクリップボード形式のま�
 - draw.io Desktop
 - AutoHotkey v2
 
-Remote SSHで開いたコードにも対応します。拡張機能はWindows側で実行されるため、VSIXはローカル側へインストールしてください。SSH先へのインストールは不要です。
+Remote SSHで開いたコードにも対応します。拡張機能はWindows側で実行されるため、VSIXはローカル側へインストールしてください。  
+SSH先へのインストールは不要です。
 
 ## 使い方
 
@@ -45,7 +46,5 @@ npm test
 # vsix 作成
 npx @vscode/vsce package
 ```
-
-AutoHotkeyとdraw.ioの連携はWindows上で確認してください。macOS上ではTypeScriptのビルドと拡張機能テストのみ実行できます。
 
 Remote SSH利用時は、コマンドパレットの`Developer: Show Running Extensions`で`vscode-clipper`がLocal側に表示されることを確認できます。

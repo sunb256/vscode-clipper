@@ -2,7 +2,7 @@
   "name": "vscode-clipper",
   "displayName": "vscode-clipper",
   "description": "vscode clip to draw.io",
-  "version": "0.1.8",
+  "version": "0.2.1",
   "engines": {
     "vscode": "^1.125.0"
   },

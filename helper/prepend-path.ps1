@@ -23,7 +23,7 @@ function Get-ByteCount([string]$Value) {
 
 function New-ClipboardHtml([string]$Fragment, [string]$Label) {
     $safeLabel = [Net.WebUtility]::HtmlEncode($Label)
-    $labelHtml = '<div style="color:#808080;font-size:11px;margin-bottom:6px;font-family:Segoe UI,sans-serif;">' + $safeLabel + '</div>'
+    $labelHtml = '<div style="color:#404040;font-size:13px;margin-bottom:4px;font-family:Segoe UI,sans-serif;">' + $safeLabel + '</div>'
     $content = $labelHtml + $Fragment
     $prefix = '<html><body><!--StartFragment-->'
     $suffix = '<!--EndFragment--></body></html>'
