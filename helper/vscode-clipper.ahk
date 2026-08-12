@@ -1,59 +1,56 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Off
 
-if A_Args.Length < 3 {
+if A_Args.Length < 4 {
     ExitApp 2
 }
 
-action := A_Args[1]
-if action = "paste-return" {
-    PasteIntoDrawio(A_Args[2], A_Args[3])
+if A_Args[1] = "paste-files" {
+    PasteFiles(A_Args[2], Integer(A_Args[3]), A_Args[4])
     ExitApp
 }
 
 ExitApp 2
 
-PasteIntoDrawio(label, executable) {
+PasteFiles(directory, count, executable) {
     sourceWindow := WinExist("A")
     drawioWindow := "ahk_exe draw.io.exe"
-    if !WinExist(drawioWindow) {
-        if executable = "" {
-            throw Error("draw.io is not running and drawioExecutable is not configured")
-        }
-        Run(executable)
-        WinWait(drawioWindow, , 10)
-    }
-
-    PrepareClipboard(label)
-    WinActivate(drawioWindow)
-    WinWaitActive(drawioWindow, , 5)
-    Send("^+a")
-    Sleep(100)
-    Send("^v")
-    Sleep(350)
-    WinActivate("ahk_id " sourceWindow)
-}
-
-PrepareClipboard(label) {
-    Sleep(100)
-
-    processId := DllCall("GetCurrentProcessId")
-    labelFile := A_Temp "\vscode-clipper-" processId ".label"
-    if FileExist(labelFile) {
-        FileDelete(labelFile)
-    }
-    FileAppend(label, labelFile, "UTF-8-RAW")
-    script := A_ScriptDir "\prepend-path.ps1"
-    command := "powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File `"" script "`" -LabelFile `"" labelFile "`""
     try {
-        exitCode := RunWait(command, , "Hide")
-        if exitCode != 0 {
-            throw Error("Failed to add the path label to the clipboard")
+        EnsureDrawio(drawioWindow, executable)
+        WinActivate(drawioWindow)
+        WinWaitActive(drawioWindow, , 5)
+
+        Loop count {
+            index := A_Index - 1
+            SetClipboard(directory "\" index ".html", directory "\" index ".txt")
+            Send("^+a")
+            Sleep(100)
+            Send("^v")
+            Sleep(350)
         }
     } finally {
-        if FileExist(labelFile) {
-            FileDelete(labelFile)
-        }
+        WinActivate("ahk_id " sourceWindow)
+    }
+}
+
+EnsureDrawio(window, executable) {
+    if WinExist(window) {
+        return
+    }
+    if executable = "" {
+        throw Error("draw.io is not running and drawioExecutable is not configured")
+    }
+    Run(executable)
+    WinWait(window, , 10)
+}
+
+SetClipboard(htmlPath, textPath) {
+    script := A_ScriptDir "\clipboard.ps1"
+    command := "powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File `"" script
+        . "`" -Mode set -HtmlPath `"" htmlPath "`" -TextPath `"" textPath "`""
+    exitCode := RunWait(command, , "Hide")
+    if exitCode != 0 {
+        throw Error("Failed to restore clipboard data")
     }
     Sleep(100)
 }

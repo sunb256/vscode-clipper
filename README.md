@@ -15,8 +15,13 @@ SSH先へのインストールは不要です。
 ## 使い方
 
 1. VS Codeでコードを選択します。
-2. `Ctrl+Shift+D`（`Clipper: Paste Selection to draw.io`）を実行します。
-3. 灰色の`relative/path.ts : [line-range]`とコードが1つのオブジェクトとしてdraw.ioへ貼り付けられ、自動的にVS Codeへ戻ります。
+2. `Ctrl+Shift+D`（`Clipper: Stack Selection`）で選択範囲をFIFOスタックへ追加します。
+3. 必要なコードを追加したら、ステータスバーの`Clipper: N`をクリックするか、コマンドパレットから`Clipper: Paste All to draw.io`を実行します。
+4. スタックしたコードが古い順に別々のオブジェクトとしてdraw.ioへ貼り付けられ、自動的にVS Codeへ戻ります。
+
+`Ctrl+Shift+Alt+D`（`Clipper: Paste Selection to draw.io`）では、現在の選択範囲をスタックせず直接貼り付けられます。スタックを破棄する場合は、コマンドパレットから`Clipper: Clear Stack`を実行します。
+
+スタックは現在のVS Codeウィンドウ内だけで保持されます。Paste Allが全件成功すると自動的にクリアされ、失敗した場合は再実行できるよう保持されます。ステータスバーへマウスを重ねると、FIFO順の内容を確認できます。
 
 ## 設定
 

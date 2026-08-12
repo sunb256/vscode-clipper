@@ -2,7 +2,11 @@
   "name": "vscode-clipper",
   "displayName": "vscode-clipper",
   "description": "vscode clip to draw.io",
-  "version": "0.2.1",
+  "version": "0.2.6",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sunb256/vscode-clipper.git"
+  },
   "engines": {
     "vscode": "^1.125.0"
   },
@@ -10,7 +14,11 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:vscode-clipper.clipAndPaste"
+    "onStartupFinished",
+    "onCommand:vscode-clipper.stackSelection",
+    "onCommand:vscode-clipper.clipAndPaste",
+    "onCommand:vscode-clipper.pasteAll",
+    "onCommand:vscode-clipper.clearStack"
   ],
   "extensionKind": [
     "ui"
@@ -19,14 +27,31 @@
   "contributes": {
     "commands": [
       {
+        "command": "vscode-clipper.stackSelection",
+        "title": "Clipper: Stack Selection"
+      },
+      {
         "command": "vscode-clipper.clipAndPaste",
         "title": "Clipper: Paste Selection to draw.io"
+      },
+      {
+        "command": "vscode-clipper.pasteAll",
+        "title": "Clipper: Paste All to draw.io"
+      },
+      {
+        "command": "vscode-clipper.clearStack",
+        "title": "Clipper: Clear Stack"
       }
     ],
     "keybindings": [
       {
-        "command": "vscode-clipper.clipAndPaste",
+        "command": "vscode-clipper.stackSelection",
         "key": "ctrl+shift+d",
+        "when": "editorTextFocus && editorHasSelection"
+      },
+      {
+        "command": "vscode-clipper.clipAndPaste",
+        "key": "ctrl+shift+alt+d",
         "when": "editorTextFocus && editorHasSelection"
       }
     ],
