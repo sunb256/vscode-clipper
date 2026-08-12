@@ -1,0 +1,9 @@
+{
+  "id": "canvas-zoom-sensitivity",
+  "name": "Canvas Zoom Sensitivity",
+  "version": "0.1.0",
+  "minAppVersion": "1.0.0",
+  "description": "Adjust the zoom sensitivity of Obsidian Canvas.",
+  "author": "sunb256",
+  "isDesktopOnly": true
+}

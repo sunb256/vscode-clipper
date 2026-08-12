@@ -22,6 +22,13 @@ SSH先へのインストールは不要です。
 
 `Clipper: Paste Selection to draw.io`はコマンドパレットから実行できます。スタックを破棄する場合は、`Clipper: Clear Stack`を実行します。
 
+`Clipper: Export to Obsidian Canvas`を実行すると、Stack GroupをGroup Node、パス・行番号と各コード片をMarkdownコードブロックのText Nodeとして新しい`.canvas`へ保存します。Edgeは生成せず、Export成功後はStackをクリアします。保存に失敗した場合はStackを保持します。
+Text Nodeの幅はコードの最長行から概算し、400〜1200pxの範囲で調整されます。
+高さはコードの表示行数から算出し、縦スクロールが発生しないサイズで生成されます。Groupの枠にはラベルを表示しません。
+すべてのStack Groupが1項目だけの場合はGroup枠を生成せず、コードNodeを直接配置します。
+Canvas名には最初のStack Itemのファイル名を使い、重複時は`-2`、`-3`を付けます。
+単一ファイルだけを開いている場合は、その親フォルダ名をVault内の保存先として自動作成します。
+
 スタックは現在のVS Codeウィンドウ内だけで保持されます。Paste Allが全件成功すると自動的にクリアされ、失敗した場合は再実行できるよう保持されます。ステータスバーへマウスを重ねると、FIFO順の内容とGroup境界を確認できます。
 
 ## 設定
@@ -30,6 +37,7 @@ SSH先へのインストールは不要です。
 - `vscode-clipper.drawioExecutable`: draw.ioが起動していない場合に実行する `draw.io.exe` のパス。
 - `vscode-clipper.includeLineNumbers`: パスラベルへ行番号を含めます（既定: true）。
 - `vscode-clipper.includeWorkspaceFolder`: パスへワークスペースフォルダ名を含めます（既定: true）。
+- `vscode-clipper.obsidian.vaultPath`: Obsidian Vaultの絶対パス。Canvas Export時は必須です。
 
 ```json
 {
@@ -37,7 +45,8 @@ SSH先へのインストールは不要です。
   //- plugin vscode clipper
   // ---------------
   "vscode-clipper.autoHotkeyPath": "C:\\Program Files\\AutoHotkey\\v2\\AutoHotkey64.exe",
-  "vscode-clipper.drawioExecutable": "C:\\Users\\<USER>\\AppData\\Local\\Programs\\draw.io\\draw.io.exe"
+  "vscode-clipper.drawioExecutable": "C:\\Users\\<USER>\\AppData\\Local\\Programs\\draw.io\\draw.io.exe",
+  "vscode-clipper.obsidian.vaultPath": "C:\\Users\\<USER>\\Documents\\Obsidian Vault"
 }
 ```
 

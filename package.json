@@ -2,7 +2,7 @@
   "name": "vscode-clipper",
   "displayName": "vscode-clipper",
   "description": "vscode clip to draw.io",
-  "version": "0.2.8",
+  "version": "0.4.8",
   "repository": {
     "type": "git",
     "url": "https://github.com/sunb256/vscode-clipper.git"
@@ -19,7 +19,8 @@
     "onCommand:vscode-clipper.stackPreviousGroup",
     "onCommand:vscode-clipper.clipAndPaste",
     "onCommand:vscode-clipper.pasteAll",
-    "onCommand:vscode-clipper.clearStack"
+    "onCommand:vscode-clipper.clearStack",
+    "onCommand:vscode-clipper.exportObsidianCanvas"
   ],
   "extensionKind": [
     "ui"
@@ -46,6 +47,10 @@
       {
         "command": "vscode-clipper.clearStack",
         "title": "Clipper: Clear Stack"
+      },
+      {
+        "command": "vscode-clipper.exportObsidianCanvas",
+        "title": "Clipper: Export to Obsidian Canvas"
       }
     ],
     "keybindings": [
@@ -82,7 +87,12 @@
           "type": "boolean",
           "default": true,
           "description": "Prefix labels with the workspace folder name."
-        }
+        },
+        "vscode-clipper.obsidian.vaultPath": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to the Obsidian vault used for Canvas exports."
+		}
       }
     }
   },

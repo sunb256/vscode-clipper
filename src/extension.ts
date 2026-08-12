@@ -3,14 +3,28 @@ import * as os from 'os';
 import * as path from 'path';
 import { execFile } from 'child_process';
 import * as vscode from 'vscode';
+import { createCanvas, writeCanvas } from './canvas';
 
 export interface ClipItem {
 	label: string;
 	html: string;
 	text: string;
+	code?: string;
+	language?: string;
 }
 
 export type StackGroup = ClipItem[];
+
+export function projectName(workspaceName?: string, documentPath?: string): string {
+	const workspace = workspaceName?.trim();
+	if (workspace) { return workspace; }
+	const parent = documentPath ? path.basename(path.dirname(documentPath)).trim() : '';
+	return parent && parent !== '.' ? parent : 'Code Models';
+}
+
+export function clearGroups(groups: StackGroup[]): void {
+	groups.length = 0;
+}
 
 export function appendStackItem(groups: StackGroup[], item: ClipItem, newGroup: boolean): void {
 	if (newGroup || groups.length === 0) {
@@ -57,7 +71,12 @@ export function mergeGroup(group: StackGroup): ClipItem {
 	};
 }
 
-export function createClipItem(label: string, sourceHtml: string, sourceText: string): ClipItem {
+export function createClipItem(
+	label: string,
+	sourceHtml: string,
+	sourceText: string,
+	language?: string,
+): ClipItem {
 	const fragment = extractFragment(sourceHtml);
 	const safeLabel = escapeHtml(label);
 	const labelHtml = '<div style="color:#404040;font-size:13px;margin-bottom:4px;'
@@ -66,6 +85,8 @@ export function createClipItem(label: string, sourceHtml: string, sourceText: st
 		label,
 		html: createClipboardHtml(labelHtml + fragment),
 		text: `${label}\r\n${sourceText}`,
+		code: sourceText,
+		language,
 	};
 }
 
@@ -134,6 +155,7 @@ class Clipper {
 		this.addCommand('vscode-clipper.clipAndPaste', () => this.clipAndPaste());
 		this.addCommand('vscode-clipper.pasteAll', () => this.pasteAll());
 		this.addCommand('vscode-clipper.clearStack', () => this.clearStack());
+		this.addCommand('vscode-clipper.exportObsidianCanvas', () => this.exportCanvas());
 		this.updateStatus();
 		this.status.show();
 	}
@@ -220,9 +242,30 @@ class Clipper {
 			void vscode.window.showWarningMessage('Clipper: Cannot clear the stack while pasting');
 			return;
 		}
-		this.groups.length = 0;
+		clearGroups(this.groups);
 		this.updateStatus();
 		void vscode.window.setStatusBarMessage('Clipper: Stack cleared', 2000);
+	}
+
+	private async exportCanvas(): Promise<void> {
+		if (this.groups.length === 0) {
+			void vscode.window.showWarningMessage('Clipper: Stack is empty');
+			return;
+		}
+		const vault = this.configValue('obsidian.vaultPath');
+		if (!vault) {
+			throw new Error('Obsidian vault path is not configured');
+		}
+		const workspace = vscode.workspace.workspaceFolders?.[0]?.name;
+		const documentPath = vscode.window.activeTextEditor?.document.uri.fsPath;
+		const project = projectName(workspace, documentPath);
+		const firstLabel = this.groups[0][0].label;
+		const destination = await writeCanvas(
+			vault, project, firstLabel, createCanvas(this.groups),
+		);
+		clearGroups(this.groups);
+		this.updateStatus();
+		void vscode.window.showInformationMessage(`Clipper: Canvas exported to ${destination}`);
 	}
 
 	private async captureSelection(): Promise<ClipItem | undefined> {
@@ -234,7 +277,7 @@ class Clipper {
 		await vscode.commands.executeCommand('editor.action.clipboardCopyAction');
 		await new Promise((resolve) => setTimeout(resolve, 150));
 		const clipboard = await this.readClipboard();
-		return createClipItem(label, clipboard.html, clipboard.text);
+		return createClipItem(label, clipboard.html, clipboard.text, editor.document.languageId);
 	}
 
 	private getEditor(): vscode.TextEditor | undefined {
