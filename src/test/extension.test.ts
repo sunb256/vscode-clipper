@@ -1,11 +1,14 @@
 import * as assert from 'assert';
 import * as vscode from 'vscode';
 import {
+	appendStackItem,
 	createClipItem,
 	formatPath,
+	mergeGroup,
 	queueTooltip,
 	removePastedItems,
 	selectedLines,
+	type StackGroup,
 } from '../extension';
 
 suite('Clipper helpers', () => {
@@ -44,8 +47,49 @@ suite('Clipper helpers', () => {
 			{ label: 'first', html: '', text: '' },
 			{ label: 'second', html: '', text: '' },
 		];
-		assert.strictEqual(queueTooltip(items), '1. first\n2. second');
+		assert.strictEqual(queueTooltip([items]), '1. first\n2. second');
 		assert.strictEqual(queueTooltip([]), 'Clipper stack is empty');
+	});
+
+	test('starts a new group for a normal stack capture', () => {
+		const first = { label: 'first', html: '', text: '' };
+		const second = { label: 'second', html: '', text: '' };
+		const groups = [[first]];
+		appendStackItem(groups, second, true);
+		assert.deepStrictEqual(groups, [[first], [second]]);
+		assert.strictEqual(queueTooltip(groups),
+			'1. first\n──────── Group ────────\n2. second');
+	});
+
+	test('adds a capture to the previous group', () => {
+		const first = { label: 'first', html: '', text: '' };
+		const second = { label: 'second', html: '', text: '' };
+		const groups: StackGroup[] = [[first]];
+		appendStackItem(groups, second, false);
+		assert.deepStrictEqual(groups, [[first, second]]);
+	});
+
+	test('creates the first group when appending to an empty stack', () => {
+		const first = { label: 'first', html: '', text: '' };
+		const groups: StackGroup[] = [];
+		appendStackItem(groups, first, false);
+		assert.deepStrictEqual(groups, [[first]]);
+	});
+
+	test('merges a group into one rich clipboard object', () => {
+		const source = 'Version:1.0\r\n<html><!--StartFragment--><b>x</b><!--EndFragment--></html>';
+		const first = createClipItem('first', source, 'x');
+		const second = createClipItem('second', source, 'y');
+		const merged = mergeGroup([first, second]);
+		assert.ok(merged.html.includes('first'));
+		assert.ok(merged.html.includes('second'));
+		assert.strictEqual(merged.text, `${first.text}\r\n\r\n${second.text}`);
+		assertClipboardOffsets(merged.html,
+			'<div style="color:#404040;font-size:13px;margin-bottom:4px;'
+			+ 'font-family:Segoe UI,sans-serif;">first</div><b>x</b>'
+			+ '<div style="height:12px"></div>'
+			+ '<div style="color:#404040;font-size:13px;margin-bottom:4px;'
+			+ 'font-family:Segoe UI,sans-serif;">second</div><b>x</b>');
 	});
 
 	test('removes only the pasted FIFO snapshot', () => {
@@ -66,11 +110,15 @@ suite('Clipper helpers', () => {
 	});
 });
 
-function assertClipboardOffsets(html: string): void {
+function assertClipboardOffsets(
+	html: string,
+	expected = '<div style="color:#404040;font-size:13px;margin-bottom:4px;'
+		+ 'font-family:Segoe UI,sans-serif;">src/a&amp;b.ts : [1]</div><b>コード</b>',
+): void {
 	const value = (name: string): number => Number(html.match(new RegExp(`${name}:(\\d+)`))?.[1]);
 	const bytes = Buffer.from(html, 'utf8');
 	assert.strictEqual(bytes.subarray(value('StartHTML'), value('StartHTML') + 6).toString(), '<html>');
 	assert.strictEqual(bytes.subarray(value('StartFragment'), value('EndFragment')).toString(),
-		'<div style="color:#404040;font-size:13px;margin-bottom:4px;font-family:Segoe UI,sans-serif;">src/a&amp;b.ts : [1]</div><b>コード</b>');
+		expected);
 	assert.strictEqual(value('EndHTML'), bytes.length);
 }

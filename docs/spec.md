@@ -32,6 +32,7 @@ VS Codeで選択したコードを、相対パスと行番号付きでdraw.io De
 
 ```text
 vscode-clipper.stackSelection
+vscode-clipper.stackPreviousGroup
 vscode-clipper.clipAndPaste
 vscode-clipper.pasteAll
 vscode-clipper.clearStack
@@ -41,18 +42,20 @@ vscode-clipper.clearStack
 
 ```text
 Clipper: Stack Selection
+Clipper: Stack Selection in Previous Group
 Clipper: Paste Selection to draw.io
 Clipper: Paste All to draw.io
 Clipper: Clear Stack
 ```
 
-ショートカットはStack Selectionが`Ctrl+Shift+D`、直接貼り付けが`Ctrl+Shift+Alt+D`。Paste AllとClear Stackにはショートカットを割り当てない。
+`Ctrl+Shift+D`は選択範囲を新しいGroupへ追加し、`Ctrl+Shift+Alt+D`は直前のGroupへ追加する。Paste AllとClear Stackにはショートカットを割り当てない。
 
 ## スタックと貼り付け形式
 
 - スタックはExtension HostのメモリにFIFOで保持し、VS Code終了・再読み込みでは消去する
 - ステータスバーには件数を表示し、ツールチップにはラベルをFIFO順に表示する
-- Paste Allは古い項目から別々のdraw.ioオブジェクトとして貼り付ける
+- StackはGroup配列として保持し、空Stackへの直前Group追加は最初のGroupを作成する
+- Paste AllはGroup内の項目をまとめ、Groupごとに1つのdraw.ioオブジェクトとして貼り付ける
 - 全件成功時だけスタックをクリアし、途中失敗時は全件を保持する
 
 パスとコードは1つのdraw.ioオブジェクトとして貼り付ける。

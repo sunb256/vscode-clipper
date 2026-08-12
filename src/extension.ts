@@ -10,6 +10,16 @@ export interface ClipItem {
 	text: string;
 }
 
+export type StackGroup = ClipItem[];
+
+export function appendStackItem(groups: StackGroup[], item: ClipItem, newGroup: boolean): void {
+	if (newGroup || groups.length === 0) {
+		groups.push([item]);
+		return;
+	}
+	groups[groups.length - 1].push(item);
+}
+
 export function removePastedItems(items: ClipItem[], pasted: readonly ClipItem[]): void {
 	if (pasted.every((item, index) => items[index] === item)) {
 		items.splice(0, pasted.length);
@@ -27,11 +37,24 @@ export function formatPath(relativePath: string, start: number, end: number): st
 	return `${relativePath} : [${suffix}]`;
 }
 
-export function queueTooltip(items: ClipItem[]): string {
-	if (items.length === 0) {
+export function queueTooltip(groups: StackGroup[]): string {
+	if (groups.length === 0) {
 		return 'Clipper stack is empty';
 	}
-	return items.map((item, index) => `${index + 1}. ${item.label}`).join('\n');
+	let itemNumber = 0;
+	return groups.map((group) => group.map((item) => {
+		itemNumber += 1;
+		return `${itemNumber}. ${item.label}`;
+	}).join('\n')).join('\n──────── Group ────────\n');
+}
+
+export function mergeGroup(group: StackGroup): ClipItem {
+	const fragments = group.map((item) => extractFragment(item.html));
+	return {
+		label: group.map((item) => item.label).join(' / '),
+		html: createClipboardHtml(fragments.join('<div style="height:12px"></div>')),
+		text: group.map((item) => item.text).join('\r\n\r\n'),
+	};
 }
 
 export function createClipItem(label: string, sourceHtml: string, sourceText: string): ClipItem {
@@ -92,7 +115,7 @@ function byteCount(value: string): number {
 }
 
 class Clipper {
-	private readonly items: ClipItem[] = [];
+	private readonly groups: StackGroup[] = [];
 	private readonly status: vscode.StatusBarItem;
 	private pasteRunning = false;
 
@@ -106,7 +129,8 @@ class Clipper {
 	}
 
 	register(): void {
-		this.addCommand('vscode-clipper.stackSelection', () => this.stackSelection());
+		this.addCommand('vscode-clipper.stackSelection', () => this.stackSelection(true));
+		this.addCommand('vscode-clipper.stackPreviousGroup', () => this.stackSelection(false));
 		this.addCommand('vscode-clipper.clipAndPaste', () => this.clipAndPaste());
 		this.addCommand('vscode-clipper.pasteAll', () => this.pasteAll());
 		this.addCommand('vscode-clipper.clearStack', () => this.clearStack());
@@ -125,7 +149,7 @@ class Clipper {
 		this.context.subscriptions.push(command);
 	}
 
-	private async stackSelection(): Promise<void> {
+	private async stackSelection(newGroup: boolean): Promise<void> {
 		if (!this.isIdle()) {
 			return;
 		}
@@ -133,7 +157,7 @@ class Clipper {
 		if (!item) {
 			return;
 		}
-		this.items.push(item);
+		appendStackItem(this.groups, item, newGroup);
 		this.updateStatus();
 	}
 
@@ -161,11 +185,11 @@ class Clipper {
 		if (!this.canPaste()) {
 			return;
 		}
-		const pending = [...this.items];
+		const pending = this.groups.map((group) => [...group]);
 		this.pasteRunning = true;
 		try {
-			await this.pasteItems(pending);
-			removePastedItems(this.items, pending);
+			await this.pasteGroups(pending);
+			this.groups.length = 0;
 			this.updateStatus();
 		} finally {
 			this.pasteRunning = false;
@@ -176,7 +200,7 @@ class Clipper {
 		if (!this.isIdle()) {
 			return false;
 		}
-		if (this.items.length === 0) {
+		if (this.groups.length === 0) {
 			void vscode.window.showWarningMessage('Clipper: Stack is empty');
 			return false;
 		}
@@ -196,7 +220,7 @@ class Clipper {
 			void vscode.window.showWarningMessage('Clipper: Cannot clear the stack while pasting');
 			return;
 		}
-		this.items.length = 0;
+		this.groups.length = 0;
 		this.updateStatus();
 		void vscode.window.setStatusBarMessage('Clipper: Stack cleared', 2000);
 	}
@@ -269,6 +293,10 @@ class Clipper {
 		}
 	}
 
+	private async pasteGroups(groups: StackGroup[]): Promise<void> {
+		await this.pasteItems(groups.map(mergeGroup));
+	}
+
 	private async writeItems(tempDir: string, items: ClipItem[]): Promise<void> {
 		const writes = items.flatMap((item, index) => [
 			fs.promises.writeFile(path.join(tempDir, `${index}.html`), item.html, 'utf8'),
@@ -311,8 +339,9 @@ class Clipper {
 	}
 
 	private updateStatus(): void {
-		this.status.text = `$(layers) Clipper: ${this.items.length}`;
-		this.status.tooltip = queueTooltip(this.items);
+		const itemCount = this.groups.reduce((count, group) => count + group.length, 0);
+		this.status.text = `$(layers) Clipper: ${itemCount}`;
+		this.status.tooltip = queueTooltip(this.groups);
 	}
 
 	private showError(error: unknown): void {

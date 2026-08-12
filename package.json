@@ -2,7 +2,7 @@
   "name": "vscode-clipper",
   "displayName": "vscode-clipper",
   "description": "vscode clip to draw.io",
-  "version": "0.2.6",
+  "version": "0.2.8",
   "repository": {
     "type": "git",
     "url": "https://github.com/sunb256/vscode-clipper.git"
@@ -16,6 +16,7 @@
   "activationEvents": [
     "onStartupFinished",
     "onCommand:vscode-clipper.stackSelection",
+    "onCommand:vscode-clipper.stackPreviousGroup",
     "onCommand:vscode-clipper.clipAndPaste",
     "onCommand:vscode-clipper.pasteAll",
     "onCommand:vscode-clipper.clearStack"
@@ -29,6 +30,10 @@
       {
         "command": "vscode-clipper.stackSelection",
         "title": "Clipper: Stack Selection"
+      },
+      {
+        "command": "vscode-clipper.stackPreviousGroup",
+        "title": "Clipper: Stack Selection in Previous Group"
       },
       {
         "command": "vscode-clipper.clipAndPaste",
@@ -50,7 +55,7 @@
         "when": "editorTextFocus && editorHasSelection"
       },
       {
-        "command": "vscode-clipper.clipAndPaste",
+        "command": "vscode-clipper.stackPreviousGroup",
         "key": "ctrl+shift+alt+d",
         "when": "editorTextFocus && editorHasSelection"
       }
