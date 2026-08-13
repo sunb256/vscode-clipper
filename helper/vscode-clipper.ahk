@@ -15,7 +15,33 @@ if A_Args[1] = "active-canvas" {
     ExitApp
 }
 
+if A_Args[1] = "focus-vscode" && A_Args.Length >= 3 {
+    FocusVscode(A_Args[2], A_Args[3])
+    ExitApp
+}
+
 ExitApp 2
+
+FocusVscode(project, uri) {
+    target := FindVscodeWindow(project)
+    if !target {
+        throw Error("VS Code project window not found: " project)
+    }
+    WinActivate("ahk_id " target)
+    WinWaitActive("ahk_id " target, , 5)
+    Sleep(150)
+    Run(uri)
+}
+
+FindVscodeWindow(project) {
+    needle := StrLower(project)
+    for window in WinGetList("ahk_exe Code.exe") {
+        if InStr(StrLower(WinGetTitle("ahk_id " window)), needle) {
+            return window
+        }
+    }
+    return 0
+}
 
 CopyActiveCanvasPath() {
     sourceWindow := WinExist("A")

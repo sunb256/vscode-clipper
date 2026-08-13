@@ -6,9 +6,12 @@ import * as vscode from 'vscode';
 import {
 	appendStackItem,
 	clearGroups,
+	codeLinkColumn,
 	createClipItem,
+	findWorkspace,
 	formatPath,
 	mergeGroup,
+	parseCodeLink,
 	projectName,
 	queueTooltip,
 	removePastedItems,
@@ -28,6 +31,40 @@ import {
 } from '../canvas';
 
 suite('Clipper helpers', () => {
+	test('parses a relative code link', () => {
+		const uri = vscode.Uri.parse('vscode://sunb256.vscode-clipper/open'
+			+ '?repo=My-App&path=src%2Fagent.ts&line=22&fallback=1');
+		assert.deepStrictEqual(parseCodeLink(uri), {
+			repo: 'My-App', filePath: 'src/agent.ts', line: 22, fallback: true,
+		});
+	});
+
+	test('rejects unsafe code links', () => {
+		const link = (filePath: string) => vscode.Uri.parse('vscode://sunb256.vscode-clipper/open'
+			+ `?repo=app&path=${encodeURIComponent(filePath)}&line=1`);
+		assert.throws(() => parseCodeLink(link('../secret.ts')));
+		assert.throws(() => parseCodeLink(link('/tmp/secret.ts')));
+		assert.throws(() => parseCodeLink(link('C:/secret.ts')));
+	});
+
+	test('finds a workspace without case sensitivity', () => {
+		const folders = [
+			{ name: 'Other', uri: vscode.Uri.file('/other'), index: 0 },
+			{ name: 'My-App', uri: vscode.Uri.file('/app'), index: 1 },
+		];
+		assert.strictEqual(findWorkspace(folders, 'my-app'), folders[1]);
+	});
+
+	test('opens code links beside by default and supports the current group', () => {
+		assert.strictEqual(codeLinkColumn('beside'), vscode.ViewColumn.Beside);
+		assert.strictEqual(codeLinkColumn('beside', vscode.ViewColumn.Two), vscode.ViewColumn.Two);
+		assert.strictEqual(codeLinkColumn('beside', undefined, vscode.ViewColumn.One),
+			vscode.ViewColumn.One);
+		assert.strictEqual(codeLinkColumn('current'), undefined);
+		const config = vscode.workspace.getConfiguration('vscode-clipper');
+		assert.strictEqual(config.get('codeLinkOpenLocation'), 'beside');
+	});
+
 	test('formats one line and a line range', () => {
 		assert.strictEqual(formatPath('src/runner.ts', 4, 4), 'src/runner.ts : [4]');
 		assert.strictEqual(formatPath('src/runner.ts', 4, 8), 'src/runner.ts : [4-8]');

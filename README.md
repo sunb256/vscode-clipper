@@ -44,6 +44,7 @@ Canvas名には最初のStack Itemのファイル名を使い、重複時は`-2`
 - `vscode-clipper.drawioExecutable`: draw.ioが起動していない場合に実行する `draw.io.exe` のパス。
 - `vscode-clipper.includeLineNumbers`: パスラベルへ行番号を含めます（既定: true）。
 - `vscode-clipper.includeWorkspaceFolder`: パスへワークスペースフォルダ名を含めます（既定: true）。
+- `vscode-clipper.codeLinkOpenLocation`: コード位置リンクの表示先。`beside`は左側の別ペイン、`current`は現在のペインで開きます（既定: `beside`）。
 - `vscode-clipper.obsidian.vaultPath`: Obsidian Vaultの絶対パス。Canvas Export時は必須です。
 
 ```json
@@ -70,3 +71,15 @@ npx @vscode/vsce package
 ```
 
 Remote SSH利用時は、コマンドパレットの`Developer: Show Running Extensions`で`vscode-clipper`がLocal側に表示されることを確認できます。
+
+## Obsidianからコード位置を開く
+
+`code-mental-model`が出力する`vscode://sunb256.vscode-clipper/open`リンクをObsidianから
+開くと、リンクのプロジェクト名と一致するワークスペースで対象ファイルの開始行へ移動します。
+
+別プロジェクトのVS Codeウィンドウがリンクを受信した場合は、AutoHotkeyがウィンドウタイトルを
+大文字・小文字を区別せず検索し、最初に一致したVS Codeウィンドウへ切り替えてリンクを一度だけ再送します。
+対象プロジェクトは事前登録不要ですが、VS Codeで開かれ、ウィンドウタイトルにプロジェクト名が含まれている必要があります。
+リンク先は既定でMarkdown Previewの左側にあるペインを優先してプレビュータブとして開きます。
+左側にペインがない場合は新規作成して左へ移動し、Markdown Previewを維持します。
+一度作成したコード表示用ペインは以後のリンクで再利用し、リンクごとにペインを増やしません。

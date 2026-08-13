@@ -45,6 +45,9 @@ Create one abstract diagram for the main flow. Add another diagram only for a ma
 - Keep code paths and symbol names out of the diagram unless they are essential to understanding it.
 - Use dashed edges only for materially inferred relationships.
 - Keep Mermaid compatible with Obsidian and draw.io.
+- Write Mermaid configuration with the legacy `%%{init: {...}}%%` directive. Do not use
+  YAML frontmatter inside Mermaid code blocks because VS Code Markdown Preview does not
+  support it consistently.
 - Do not use custom styling, icons, decorative detail, or line numbers.
 
 ### 5. Write the implementation map
@@ -55,8 +58,8 @@ For each responsibility represented by the flow, write exactly this shape:
 
 ```markdown
 - **選択内容を取得する**：VS Codeの選択範囲、ファイル情報、言語IDを処理用データへまとめる。
-  - `src/extension.ts [20-35]` — `captureSelection`
-  - `src/extension.ts [120-130]` — `createClipItem`
+  - [`src/extension.ts [20-35]`](vscode://sunb256.vscode-clipper/open?repo=example-project&path=src%2Fextension.ts&line=20) — `captureSelection`
+  - [`src/extension.ts [120-130]`](vscode://sunb256.vscode-clipper/open?repo=example-project&path=src%2Fextension.ts&line=120) — `createClipItem`
 ```
 
 Apply these rules:
@@ -64,6 +67,11 @@ Apply these rules:
 - Keep the explanation to one sentence.
 - List 1–3 code locations that best represent the responsibility.
 - Use repository-relative paths and code position plus symbol names.
+- Render every code location as a Markdown link whose label remains the repository-relative
+  path and position. Use the repository root directory name as `repo`, the relative path as
+  `path`, and the first line as `line` in this URI shape:
+  `vscode://sunb256.vscode-clipper/open?repo=<encoded>&path=<encoded>&line=<number>`.
+- Percent-encode every query value. Never put an absolute path in the generated document.
 - Order entries in the same direction as the Mermaid flow.
 - Explain the role of the code, not its statements line by line.
 - Do not include code snippets, numbered walkthroughs, evidence tables, exhaustive error cases, or reading-order sections unless requested.
@@ -91,5 +99,5 @@ Before finishing, confirm:
 - explanations are one sentence each
 - code-location lists contain only the most relevant locations
 - paths are repository-relative and no stale line numbers are used
+- every code-location link contains the repository name, relative path, and first line
 - the Markdown file exists at the reported path
-

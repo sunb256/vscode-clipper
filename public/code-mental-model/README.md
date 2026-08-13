@@ -27,6 +27,11 @@ $code-mental-model Canvasへの追記処理について、Mermaidと実装箇所
   └ コードパス＋シンボル名
 ```
 
+コードパスはVS Code Clipperの専用URIリンクとして出力されます。Obsidianから
+クリックすると、対象プロジェクトのVS Codeウィンドウでファイルの開始行を開きます。
+別プロジェクトのウィンドウが受信した場合は、Windows上のVS Codeウィンドウタイトルを
+大文字・小文字を区別せず検索し、最初に一致したウィンドウへ切り替えます。
+
 
 カテゴリ未指定の場合は候補を提示し、選択後に`docs/mental-models/<機能名>.md`を生成します。  
 
@@ -37,8 +42,6 @@ $code-mental-model Canvasへの追記処理について、Mermaidと実装箇所
 ```bash
 $code-mental-model このリポジトリから説明対象の機能候補を挙げて
 ```
-
-
 
 
 

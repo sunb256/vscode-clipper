@@ -15,6 +15,56 @@ export interface ClipItem {
 
 export type StackGroup = ClipItem[];
 
+export interface CodeLink {
+	repo: string;
+	filePath: string;
+	line: number;
+	fallback: boolean;
+}
+
+export type CodeLinkLocation = 'beside' | 'current';
+
+export function codeLinkColumn(
+	location: CodeLinkLocation,
+	remembered?: vscode.ViewColumn,
+	leftColumn?: vscode.ViewColumn,
+): vscode.ViewColumn | undefined {
+	if (location === 'current') {
+		return undefined;
+	}
+	return remembered ?? leftColumn ?? vscode.ViewColumn.Beside;
+}
+
+export function parseCodeLink(uri: vscode.Uri): CodeLink {
+	if (uri.path !== '/open') {
+		throw new Error('Unsupported code link');
+	}
+	const query = new URLSearchParams(uri.query);
+	const repo = query.get('repo')?.trim() ?? '';
+	const filePath = query.get('path')?.trim().replace(/\\/g, '/') ?? '';
+	const line = Number(query.get('line'));
+	if (!repo || !isSafeRelativePath(filePath) || !Number.isInteger(line) || line < 1) {
+		throw new Error('Invalid code link');
+	}
+	return { repo, filePath, line, fallback: query.get('fallback') === '1' };
+}
+
+export function findWorkspace(
+	folders: readonly vscode.WorkspaceFolder[] | undefined,
+	repo: string,
+): vscode.WorkspaceFolder | undefined {
+	return folders?.find((folder) => folder.name.localeCompare(repo, undefined, {
+		sensitivity: 'accent',
+	}) === 0);
+}
+
+function isSafeRelativePath(filePath: string): boolean {
+	if (!filePath || filePath.startsWith('/') || /^[a-zA-Z]:\//.test(filePath)) {
+		return false;
+	}
+	return filePath.split('/').every((part) => part !== '' && part !== '.' && part !== '..');
+}
+
 export function projectName(workspaceName?: string, documentPath?: string): string {
 	const workspace = workspaceName?.trim();
 	if (workspace) { return workspace; }
@@ -139,6 +189,7 @@ class Clipper {
 	private readonly groups: StackGroup[] = [];
 	private readonly status: vscode.StatusBarItem;
 	private pasteRunning = false;
+	private codeViewColumn?: vscode.ViewColumn;
 
 	constructor(private readonly context: vscode.ExtensionContext) {
 		this.status = vscode.window.createStatusBarItem(
@@ -158,8 +209,86 @@ class Clipper {
 		this.addCommand('vscode-clipper.clearStack', () => this.clearStack());
 		this.addCommand('vscode-clipper.appendObsidianCanvas', () => this.appendActiveCanvas());
 		this.addCommand('vscode-clipper.exportObsidianCanvas', () => this.exportCanvas());
+		this.context.subscriptions.push(vscode.window.registerUriHandler({
+			handleUri: (uri) => this.handleUri(uri),
+		}));
 		this.updateStatus();
 		this.status.show();
+	}
+
+	private async handleUri(uri: vscode.Uri): Promise<void> {
+		try {
+			const link = parseCodeLink(uri);
+			const folder = findWorkspace(vscode.workspace.workspaceFolders, link.repo);
+			if (folder) {
+				await this.openCode(folder, link);
+				return;
+			}
+			if (link.fallback) {
+				throw new Error(`Workspace not found after switching: ${link.repo}`);
+			}
+			this.requireWindows();
+			const retryUri = uri.with({ query: `${uri.query}&fallback=1` }).toString(true);
+			await this.runHelper('focus-vscode', link.repo, retryUri);
+		} catch (error) {
+			this.showError(error);
+		}
+	}
+
+	private async openCode(folder: vscode.WorkspaceFolder, link: CodeLink): Promise<void> {
+		const target = vscode.Uri.joinPath(folder.uri, ...link.filePath.split('/'));
+		try {
+			await vscode.workspace.fs.stat(target);
+		} catch {
+			throw new Error(`Code file not found: ${link.filePath}`);
+		}
+		const document = await vscode.workspace.openTextDocument(target);
+		if (link.line > document.lineCount) {
+			throw new Error(`Line ${link.line} is outside ${link.filePath}`);
+		}
+		const location = vscode.workspace.getConfiguration('vscode-clipper')
+			.get<CodeLinkLocation>('codeLinkOpenLocation', 'beside');
+		if (!this.hasCodeGroup()) {
+			this.codeViewColumn = undefined;
+		}
+		const leftColumn = this.leftGroupColumn();
+		const moveLeft = location === 'beside'
+			&& this.codeViewColumn === undefined && leftColumn === undefined;
+		const editor = await vscode.window.showTextDocument(document, {
+			viewColumn: codeLinkColumn(location, this.codeViewColumn, leftColumn),
+			preview: true,
+		});
+		if (location === 'beside') {
+			if (moveLeft) {
+				await vscode.commands.executeCommand('workbench.action.moveActiveEditorGroupLeft');
+			}
+			this.codeViewColumn = vscode.window.tabGroups.activeTabGroup.viewColumn
+				?? editor.viewColumn;
+		}
+		const position = new vscode.Position(link.line - 1, 0);
+		editor.selection = new vscode.Selection(position, position);
+		editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+	}
+
+	private hasCodeGroup(): boolean {
+		if (this.codeViewColumn === undefined) {
+			return false;
+		}
+		return vscode.window.tabGroups.all.some(
+			(group) => group.viewColumn === this.codeViewColumn,
+		);
+	}
+
+	private leftGroupColumn(): vscode.ViewColumn | undefined {
+		const activeColumn = vscode.window.tabGroups.activeTabGroup.viewColumn;
+		if (activeColumn === undefined) {
+			return undefined;
+		}
+		return vscode.window.tabGroups.all
+			.map((group) => group.viewColumn)
+			.filter((column): column is vscode.ViewColumn => column !== undefined
+				&& column < activeColumn)
+			.sort((left, right) => right - left)[0];
 	}
 
 	private addCommand(name: string, action: () => Promise<void>): void {

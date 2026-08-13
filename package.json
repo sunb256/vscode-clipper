@@ -1,8 +1,9 @@
 {
   "name": "vscode-clipper",
+  "publisher": "sunb256",
   "displayName": "vscode-clipper",
   "description": "vscode clip to draw.io",
-  "version": "0.5.2",
+  "version": "0.5.6",
   "repository": {
     "type": "git",
     "url": "https://github.com/sunb256/vscode-clipper.git"
@@ -14,6 +15,7 @@
     "Other"
   ],
   "activationEvents": [
+    "onUri",
     "onStartupFinished",
     "onCommand:vscode-clipper.stackSelection",
     "onCommand:vscode-clipper.stackPreviousGroup",
@@ -102,6 +104,19 @@
           "type": "boolean",
           "default": true,
           "description": "Prefix labels with the workspace folder name."
+        },
+        "vscode-clipper.codeLinkOpenLocation": {
+          "type": "string",
+          "enum": [
+            "beside",
+            "current"
+          ],
+          "enumDescriptions": [
+            "Open code links in a reusable editor group to the left of the current one.",
+            "Open code links in the current editor group."
+          ],
+          "default": "beside",
+          "description": "Choose where code links opened from Markdown or Obsidian are displayed."
         },
         "vscode-clipper.obsidian.vaultPath": {
           "type": "string",
