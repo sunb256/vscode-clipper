@@ -23,3 +23,96 @@
 .mermaid text {
     overflow: visible !important;
 }
+
+/* ================================
+   Neutral Canvas node borders
+   ================================ */
+
+.canvas-node-container {
+    border-color: #cbd0d8 !important;
+    box-shadow: 0 0 0 1px #cbd0d8 !important;
+}
+
+.canvas-node:hover .canvas-node-container,
+.canvas-node.is-selected .canvas-node-container {
+    border-color: #e2e5e9 !important;
+    box-shadow: 0 0 0 2px #e2e5e9 !important;
+}
+
+/* ================================
+   Neutral Mermaid nodes
+   ================================ */
+
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon,
+.mermaid .node path,
+.mermaid rect.actor,
+.mermaid .labelBox {
+    fill: #f1f3f5 !important;
+    stroke: #777c73 !important;
+    stroke-width: 2.5px !important;
+}
+
+.mermaid .nodeLabel,
+.mermaid .nodeLabel p,
+.mermaid text.actor {
+    color: #25282d !important;
+    fill: #25282d !important;
+}
+
+.mermaid .edgeLabel rect,
+.mermaid .labelBkg {
+    fill: #f7f8f9 !important;
+    opacity: 1 !important;
+}
+
+.mermaid .actor-line {
+    stroke: #8f969f !important;
+    stroke-width: 1.5px !important;
+    opacity: 1 !important;
+}
+
+/* Sequence diagram alt/opt/loop groups */
+.mermaid rect.rect {
+    fill: #eef0f2 !important;
+    fill-opacity: 0.18 !important;
+    stroke: #7f8791 !important;
+    stroke-width: 1.75px !important;
+    stroke-opacity: 1 !important;
+}
+
+.mermaid .loopLine {
+    stroke: #7f8791 !important;
+    stroke-width: 1.75px !important;
+    stroke-opacity: 1 !important;
+}
+
+.mermaid .labelBox {
+    fill: #e6e9ed !important;
+    stroke: #7f8791 !important;
+    stroke-width: 1.75px !important;
+}
+
+.mermaid .loopText,
+.mermaid .loopText > tspan,
+.mermaid .labelText {
+    fill: #25282d !important;
+    color: #25282d !important;
+    font-weight: 600 !important;
+}
+
+
+/* ================================
+   Code block line-height fix
+   ================================ */
+
+.markdown-rendered pre,
+.markdown-rendered pre code,
+.canvas-node-content pre,
+.canvas-node-content pre code,
+.markdown-source-view.mod-cm6 .HyperMD-codeblock,
+.markdown-source-view.mod-cm6 .HyperMD-codeblock code {
+    line-height: 1.15 !important;
+}

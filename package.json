@@ -3,7 +3,7 @@
   "publisher": "sunb256",
   "displayName": "vscode-clipper",
   "description": "vscode clip to draw.io",
-  "version": "0.5.6",
+  "version": "0.5.9",
   "repository": {
     "type": "git",
     "url": "https://github.com/sunb256/vscode-clipper.git"

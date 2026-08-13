@@ -3,8 +3,11 @@
 実際のコードを追跡し、機能の全体像を次の形式で整理するCodex Skillです。
 
 - 抽象化したMermaid動作フロー
+- 実際のクラス名などを参加者名に使ったMermaidシーケンス図
 - 機能単位の1行説明
 - 関連するコードパスとシンボル名の箇条書き
+- 単独で利用できるMarkdownファイル
+- 全内容をテキストノードに内包する自己完結型Obsidian Canvasファイル
 
 
 ## 使用例
@@ -23,6 +26,8 @@ $code-mental-model Canvasへの追記処理について、Mermaidと実装箇所
 ↓
 抽象化したMermaidフロー
 ↓
+参加者間のMermaidシーケンス図
+↓
 機能ごとの1行説明
   └ コードパス＋シンボル名
 ```
@@ -33,7 +38,14 @@ $code-mental-model Canvasへの追記処理について、Mermaidと実装箇所
 大文字・小文字を区別せず検索し、最初に一致したウィンドウへ切り替えます。
 
 
-カテゴリ未指定の場合は候補を提示し、選択後に`docs/mental-models/<機能名>.md`を生成します。  
+カテゴリ未指定の場合は候補を提示し、選択後に次の2ファイルを生成します。
+
+```text
+docs/mental-models/<機能名>.md
+docs/mental-models/<機能名>.canvas
+```
+
+MarkdownとCanvasは同じ内容を持ちますが、CanvasはMarkdownを参照しません。Canvasのテキストノードに全文を直接格納するため、`.md`と`.canvas`のどちらも単独でコピーして利用できます。
 
 
 機能を指定せず、候補を出させることもできます。
@@ -42,7 +54,3 @@ $code-mental-model Canvasへの追記処理について、Mermaidと実装箇所
 ```bash
 $code-mental-model このリポジトリから説明対象の機能候補を挙げて
 ```
-
-
-
-

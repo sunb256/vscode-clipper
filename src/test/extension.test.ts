@@ -209,11 +209,11 @@ suite('Clipper helpers', () => {
 		assert.strictEqual(fencedCode('const x = 1;', 'typescript'),
 			'```typescript\nconst x = 1;\n```');
 		assert.strictEqual(fencedCode('```\ncode', 'bad language'), '````\n```\ncode\n````');
-		assert.strictEqual(nodeHeight('x'), 88);
-		assert.strictEqual(nodeHeight('x', 400, 'src/a.ts : [1]'), 112);
-		assert.strictEqual(nodeHeight('x\n'.repeat(40)), 1208);
-		assert.strictEqual(nodeHeight('x'.repeat(200), 400), 200);
-		assert.strictEqual(nodeHeight('x', 400, 'path/'.repeat(30)), 184);
+		assert.strictEqual(nodeHeight('x'), 80);
+		assert.strictEqual(nodeHeight('x', 400, 'src/a.ts : [1]'), 104);
+		assert.strictEqual(nodeHeight('x\n'.repeat(40)), 880);
+		assert.strictEqual(nodeHeight('x'.repeat(200), 400), 160);
+		assert.strictEqual(nodeHeight('x', 400, 'path/'.repeat(30)), 176);
 		assert.strictEqual(nodeWidth('short'), 400);
 		assert.strictEqual(nodeWidth('x'.repeat(80)), 800);
 		assert.strictEqual(nodeWidth('x'.repeat(200)), 1200);

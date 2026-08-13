@@ -1,5 +1,4 @@
 interface:
   display_name: "Code Mental Model"
-  short_description: "Mermaidフローと実装箇所の簡潔な対応表を生成"
-  default_prompt: "Use $code-mental-model to explain a repository feature with an abstract Mermaid flow and concise implementation-location bullets."
-
+  short_description: "独立したコード解説MarkdownとCanvasを生成"
+  default_prompt: "Use $code-mental-model to explain a repository feature in independent Markdown and standalone Obsidian Canvas files. In sequence diagrams, name internal participants with exact verified class or code-symbol names."

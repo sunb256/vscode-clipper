@@ -9,6 +9,7 @@
 
 ```mermaid
 %%{init: {"flowchart": {"rankSpacing": 20, "nodeSpacing": 20}}}%%
+
 flowchart TD
     A["操作を受け付ける"] --> B["入力を処理用データへ変換"]
     B --> C["対象を特定"]
@@ -18,17 +19,39 @@ flowchart TD
 
 <!-- 入口または結果が大きく異なる場合だけ、別フローを追加する。 -->
 
+## シーケンス
+
+```mermaid
+sequenceDiagram
+    actor User as ユーザー
+    participant Controller as ExampleController
+    participant Service as ExampleService
+    participant Repository as ExampleRepository
+
+    User->>Controller: execute(input)
+    Controller->>Service: execute(input)
+    Service->>Repository: save(result)
+    Repository-->>Service: savedResult
+    Service-->>Controller: result
+    Controller-->>User: 完了を通知する
+```
+
+<!-- コード把握用の図のため、内部参加者の表示名にはリポジトリで検索できる実際のクラス名・モジュール名・関数名などを使う。メッセージにも、存在する場合は実際のメソッド名・関数名・コマンド名・イベント名を使う。意味のある参加者間連携がない場合だけ、この節を削除して理由を補足へ記載する。 -->
+
 
 
 ## 実装の構成
 
-- **操作を受け付ける**：ユーザー操作を受け取り、機能の処理を開始する。
+- **操作を受け付ける**
+  - ユーザー操作を受け取り、機能の処理を開始する。
   - [`src/example.ts [10-20]`](vscode://sunb256.vscode-clipper/open?repo=example-project&path=src%2Fexample.ts&line=10) — `registerCommand`
 
-- **入力を処理用データへ変換する**：入力値を後続処理で扱うデータ構造へまとめる。
+- **入力を処理用データへ変換する**
+  - 入力値を後続処理で扱うデータ構造へまとめる。
   - [`src/example.ts [120-130]`](vscode://sunb256.vscode-clipper/open?repo=example-project&path=src%2Fexample.ts&line=120) — `createInput`
 
-- **主要処理を実行する**：対象データに対して、この機能の中心となる処理を行う。
+- **主要処理を実行する**
+  - 対象データに対して、この機能の中心となる処理を行う。
   - [`src/service.ts [5-10]`](vscode://sunb256.vscode-clipper/open?repo=example-project&path=src%2Fservice.ts&line=5) — `Service.run`
 
 
