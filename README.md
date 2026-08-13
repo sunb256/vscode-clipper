@@ -38,7 +38,8 @@ Canvas名には最初のStack Itemのファイル名を使い、重複時は`-2`
 
 ## 設定
 
-アクティブCanvasへの追加には、`public/obsidian-plugin/copy-path`をObsidianへインストールして有効にしてください。Obsidianで追加先のCanvasを開いた状態で実行します。
+アクティブCanvasへの追加には、`public/obsidian-plugin/copy-path`をObsidianへインストールして有効にしてください。  
+Obsidianで追加先のCanvasを開いた状態で実行します。
 
 - `vscode-clipper.autoHotkeyPath`: AutoHotkey v2実行ファイル。空の場合はPATH上の `AutoHotkey64.exe` を使います。
 - `vscode-clipper.drawioExecutable`: draw.ioが起動していない場合に実行する `draw.io.exe` のパス。
