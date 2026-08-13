@@ -3,24 +3,24 @@
   1. Obsidianの保管庫（Vault）フォルダを開きます。
   2. 次のフォルダを作成します。
 
-  <Vault>/.obsidian/plugins/canvas-zoom-sensitivity/
+  <Vault>/.obsidian/plugins/copy-path/
 
   Windowsの例:
 
-  C:\Users\ユーザー名\Documents\MyVault\.obsidian\plugins\canvas-zoom-sensitivity\
+  C:\Users\ユーザー名\Documents\MyVault\.obsidian\plugins\copy-path\
 
   3. 以下の3ファイルを作成したフォルダへコピーします。
 
-  - public/obsidian-plugin/manifest.json
-  - public/obsidian-plugin/main.js
-  - public/obsidian-plugin/versions.json
+  - public/obsidian-plugin/copy-path/manifest.json
+  - public/obsidian-plugin/copy-path/main.js
+  - public/obsidian-plugin/copy-path/versions.json
 
   配置後はこうなります。
 
   MyVault/
   └── .obsidian/
       └── plugins/
-          └── canvas-zoom-sensitivity/
+          └── copy-path/
               ├── manifest.json
               ├── main.js
               └── versions.json
@@ -31,4 +31,3 @@
   7. 「Canvas Zoom Sensitivity」をONにします。
   8. プラグイン設定の「Zoom sensitivity」で感度を調整します。
 
-  推奨値は 0.25 です。Obsidian側のCanvas設定は「Mouse wheel behavior: Zoom」にしてください。

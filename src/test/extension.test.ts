@@ -16,6 +16,8 @@ import {
 	type StackGroup,
 } from '../extension';
 import {
+	appendCanvas,
+	appendCanvasFile,
 	canvasName,
 	createCanvas,
 	fencedCode,
@@ -193,6 +195,39 @@ suite('Clipper helpers', () => {
 			assert.deepStrictEqual(JSON.parse(await fs.promises.readFile(first, 'utf8')), canvas);
 		} finally {
 			await fs.promises.rm(vault, { recursive: true, force: true });
+		}
+	});
+
+	test('appends Canvas nodes below existing content and preserves edges', () => {
+		const item = (label: string) => ({ label, html: '', text: label, code: label });
+		const existing = createCanvas([[item('existing')]], () => 'existing');
+		existing.edges.push({ id: 'edge' });
+		const addition = createCanvas([[item('added')]], () => 'added');
+		const updated = appendCanvas(existing, addition);
+		assert.deepStrictEqual(updated.edges, [{ id: 'edge' }]);
+		assert.strictEqual(updated.nodes.length, 2);
+		assert.ok(updated.nodes[0].y + updated.nodes[0].height < updated.nodes[1].y);
+	});
+
+	test('updates an existing Canvas file without dropping custom data', async () => {
+		const directory = await fs.promises.mkdtemp(path.join(os.tmpdir(), 'clipper-append-'));
+		const destination = path.join(directory, 'active.canvas');
+		const existing = {
+			nodes: [{ id: 'old', type: 'text', x: 0, y: 0, width: 400, height: 100,
+				text: 'old', color: '1' }],
+			edges: [{ id: 'edge', fromNode: 'old', toNode: 'old' }],
+		};
+		try {
+			await fs.promises.writeFile(destination, JSON.stringify(existing));
+			await appendCanvasFile(destination, [[{
+				label: 'new', html: '', text: 'new', code: 'new', language: 'text',
+			}]]);
+			const updated = JSON.parse(await fs.promises.readFile(destination, 'utf8'));
+			assert.strictEqual(updated.nodes[0].color, '1');
+			assert.deepStrictEqual(updated.edges, existing.edges);
+			assert.ok(updated.nodes[0].y + updated.nodes[0].height < updated.nodes[1].y);
+		} finally {
+			await fs.promises.rm(directory, { recursive: true, force: true });
 		}
 	});
 

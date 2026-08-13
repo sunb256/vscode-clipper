@@ -3,7 +3,7 @@ import * as os from 'os';
 import * as path from 'path';
 import { execFile } from 'child_process';
 import * as vscode from 'vscode';
-import { createCanvas, writeCanvas } from './canvas';
+import { appendCanvasFile, createCanvas, writeCanvas } from './canvas';
 
 export interface ClipItem {
 	label: string;
@@ -145,7 +145,7 @@ class Clipper {
 			vscode.StatusBarAlignment.Left,
 			Number.MIN_SAFE_INTEGER,
 		);
-		this.status.command = 'vscode-clipper.pasteAll';
+		this.status.command = 'vscode-clipper.appendObsidianCanvas';
 		this.context.subscriptions.push(this.status);
 	}
 
@@ -153,8 +153,10 @@ class Clipper {
 		this.addCommand('vscode-clipper.stackSelection', () => this.stackSelection(true));
 		this.addCommand('vscode-clipper.stackPreviousGroup', () => this.stackSelection(false));
 		this.addCommand('vscode-clipper.clipAndPaste', () => this.clipAndPaste());
+		this.addCommand('vscode-clipper.clipAndAppendObsidian', () => this.clipAndAppend());
 		this.addCommand('vscode-clipper.pasteAll', () => this.pasteAll());
 		this.addCommand('vscode-clipper.clearStack', () => this.clearStack());
+		this.addCommand('vscode-clipper.appendObsidianCanvas', () => this.appendActiveCanvas());
 		this.addCommand('vscode-clipper.exportObsidianCanvas', () => this.exportCanvas());
 		this.updateStatus();
 		this.status.show();
@@ -194,6 +196,24 @@ class Clipper {
 		this.pasteRunning = true;
 		try {
 			await this.pasteItems([item]);
+		} finally {
+			this.pasteRunning = false;
+		}
+	}
+
+	private async clipAndAppend(): Promise<void> {
+		if (!this.isIdle()) {
+			return;
+		}
+		const item = await this.captureSelection();
+		if (!item) {
+			return;
+		}
+		this.pasteRunning = true;
+		try {
+			const destination = await this.activeCanvasPath();
+			await appendCanvasFile(destination, [[item]]);
+			void vscode.window.showInformationMessage(`Clipper: Added to ${destination}`);
 		} finally {
 			this.pasteRunning = false;
 		}
@@ -266,6 +286,32 @@ class Clipper {
 		clearGroups(this.groups);
 		this.updateStatus();
 		void vscode.window.showInformationMessage(`Clipper: Canvas exported to ${destination}`);
+	}
+
+	private async appendActiveCanvas(): Promise<void> {
+		if (!this.canPaste()) {
+			return;
+		}
+		const pending = this.groups.map((group) => [...group]);
+		this.pasteRunning = true;
+		try {
+			const destination = await this.activeCanvasPath();
+			await appendCanvasFile(destination, pending);
+			clearGroups(this.groups);
+			this.updateStatus();
+			void vscode.window.showInformationMessage(`Clipper: Added to ${destination}`);
+		} finally {
+			this.pasteRunning = false;
+		}
+	}
+
+	private async activeCanvasPath(): Promise<string> {
+		this.requireWindows();
+		const destination = (await this.runHelper('active-canvas')).trim();
+		if (!destination) {
+			throw new Error('Copy Path did not return an active Canvas path');
+		}
+		return destination;
 	}
 
 	private async captureSelection(): Promise<ClipItem | undefined> {
@@ -356,13 +402,19 @@ class Clipper {
 		]);
 	}
 
-	private runHelper(...args: string[]): Promise<void> {
+	private runHelper(...args: string[]): Promise<string> {
 		const executable = this.configValue('autoHotkeyPath') || 'AutoHotkey64.exe';
 		const script = this.context.asAbsolutePath(path.join('helper', 'vscode-clipper.ahk'));
 		if (!fs.existsSync(script)) {
 			return Promise.reject(new Error('AutoHotkey helper not found'));
 		}
-		return this.exec(executable, [script, ...args]);
+		return this.execOutput(executable, [script, ...args]);
+	}
+
+	private execOutput(file: string, args: string[]): Promise<string> {
+		return new Promise((resolve, reject) => {
+			execFile(file, args, (error, stdout) => error ? reject(error) : resolve(stdout));
+		});
 	}
 
 	private exec(file: string, args: string[]): Promise<void> {

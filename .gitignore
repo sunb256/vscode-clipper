@@ -4,4 +4,5 @@ node_modules
 .vscode-test/
 # *.vsix
 
-public/obsidian-plugin/node_modules
+public/obsidian-plugin/canvas-zoom-sensitivity/node_modules
+public/obsidian-plugin/copy-path/node_modules

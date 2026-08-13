@@ -16,7 +16,7 @@ interface CanvasNode {
 
 export interface CanvasData {
 	nodes: CanvasNode[];
-	edges: never[];
+	edges: unknown[];
 }
 
 const columns = 2;
@@ -139,6 +139,53 @@ export async function writeCanvas(
 	return atomicWrite(outputDir, baseName, JSON.stringify(data, null, 2) + '\n');
 }
 
+export function appendCanvas(existing: CanvasData, addition: CanvasData): CanvasData {
+	const bottom = existing.nodes.reduce(
+		(value, node) => Math.max(value, node.y + node.height),
+		Number.NEGATIVE_INFINITY,
+	);
+	const top = addition.nodes.reduce(
+		(value, node) => Math.min(value, node.y),
+		Number.POSITIVE_INFINITY,
+	);
+	const offset = Number.isFinite(bottom) && Number.isFinite(top)
+		? bottom + groupGap - top
+		: 0;
+	const nodes = addition.nodes.map((node) => ({ ...node, y: node.y + offset }));
+	return { nodes: [...existing.nodes, ...nodes], edges: [...existing.edges] };
+}
+
+export async function appendCanvasFile(destination: string, groups: StackGroup[]): Promise<void> {
+	if (path.extname(destination).toLowerCase() !== '.canvas') {
+		throw new Error('Active Obsidian file is not a Canvas');
+	}
+	const source = await fs.promises.readFile(destination, 'utf8');
+	const existing = parseCanvas(source);
+	const updated = appendCanvas(existing, createCanvas(groups));
+	await atomicReplace(destination, JSON.stringify(updated, null, 2) + '\n');
+}
+
+function parseCanvas(source: string): CanvasData {
+	const data: unknown = JSON.parse(source);
+	if (!isRecord(data) || !Array.isArray(data.nodes) || !Array.isArray(data.edges)) {
+		throw new Error('Active Canvas has an invalid JSON structure');
+	}
+	if (!data.nodes.every(isCanvasNode)) {
+		throw new Error('Active Canvas contains an invalid node');
+	}
+	return { nodes: data.nodes, edges: data.edges };
+}
+
+function isCanvasNode(value: unknown): value is CanvasNode {
+	if (!isRecord(value)) { return false; }
+	return ['x', 'y', 'width', 'height'].every((key) =>
+		typeof value[key] === 'number' && Number.isFinite(value[key]));
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
+
 export function safeDirectory(project: string): string {
 	const safeName = project.replace(/[<>:"/\\|?*\u0000-\u001f]/g, '-').replace(/[. ]+$/g, '').trim();
 	if (!safeName || safeName === '.' || safeName === '..') {
@@ -172,6 +219,17 @@ async function atomicWrite(directory: string, baseName: string, content: string)
 				if ((error as NodeJS.ErrnoException).code !== 'EEXIST') { throw error; }
 			}
 		}
+	} finally {
+		await fs.promises.unlink(temporary).catch(() => undefined);
+	}
+}
+
+async function atomicReplace(destination: string, content: string): Promise<void> {
+	const directory = path.dirname(destination);
+	const temporary = path.join(directory, `.${path.basename(destination)}-${randomUUID()}.tmp`);
+	await fs.promises.writeFile(temporary, content, { encoding: 'utf8', flag: 'wx' });
+	try {
+		await fs.promises.rename(temporary, destination);
 	} finally {
 		await fs.promises.unlink(temporary).catch(() => undefined);
 	}

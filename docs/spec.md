@@ -17,7 +17,7 @@ VS Codeで選択したコードを、相対パスと行番号付きでdraw.io De
 
 ## 操作
 
-コードを選択して`Ctrl+Shift+D`を実行するとFIFOスタックへ追加する。ステータスバーまたはコマンドパレットのPaste Allで全件を貼り付ける。
+コードを選択して`Ctrl+Shift+D`を実行するとFIFOスタックへ追加する。ステータスバーをクリックすると、Obsidianで現在開いているCanvasへ追記する。コマンドパレットのPaste Allではdraw.ioへ全件を貼り付ける。
 
 ```text
 コードを選択
@@ -34,6 +34,7 @@ VS Codeで選択したコードを、相対パスと行番号付きでdraw.io De
 vscode-clipper.stackSelection
 vscode-clipper.stackPreviousGroup
 vscode-clipper.clipAndPaste
+vscode-clipper.clipAndAppendObsidian
 vscode-clipper.pasteAll
 vscode-clipper.clearStack
 ```
@@ -44,11 +45,12 @@ vscode-clipper.clearStack
 Clipper: Stack Selection
 Clipper: Stack Selection in Previous Group
 Clipper: Paste Selection to draw.io
+Clipper: Add Selection to Active Obsidian Canvas
 Clipper: Paste All to draw.io
 Clipper: Clear Stack
 ```
 
-`Ctrl+Shift+D`は選択範囲を新しいGroupへ追加し、`Ctrl+Shift+Alt+D`は直前のGroupへ追加する。Paste AllとClear Stackにはショートカットを割り当てない。
+`Ctrl+Shift+D`は選択範囲を新しいGroupへ追加し、`Ctrl+Shift+Alt+D`は直前のGroupへ追加する。`Shift+Alt+D`はStackを経由せず、選択範囲をアクティブなObsidian Canvasへ直接追加する。Paste AllとClear Stackにはショートカットを割り当てない。
 
 ## スタックと貼り付け形式
 

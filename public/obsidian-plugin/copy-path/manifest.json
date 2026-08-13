@@ -1,0 +1,9 @@
+{
+  "id": "copy-path",
+  "name": "Copy Canvas Path",
+  "version": "0.1.0",
+  "minAppVersion": "1.0.0",
+  "description": "Copy the absolute path of the active Obsidian Canvas.",
+  "author": "sunb256",
+  "isDesktopOnly": true
+}

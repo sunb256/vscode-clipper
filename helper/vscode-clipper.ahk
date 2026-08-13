@@ -1,16 +1,44 @@
 #Requires AutoHotkey v2.0
 #SingleInstance Off
 
-if A_Args.Length < 4 {
+if A_Args.Length < 1 {
     ExitApp 2
 }
 
-if A_Args[1] = "paste-files" {
+if A_Args[1] = "paste-files" && A_Args.Length >= 4 {
     PasteFiles(A_Args[2], Integer(A_Args[3]), A_Args[4])
     ExitApp
 }
 
+if A_Args[1] = "active-canvas" {
+    CopyActiveCanvasPath()
+    ExitApp
+}
+
 ExitApp 2
+
+CopyActiveCanvasPath() {
+    sourceWindow := WinExist("A")
+    obsidianWindow := "ahk_exe Obsidian.exe"
+    savedClipboard := ClipboardAll()
+    try {
+        if !WinExist(obsidianWindow) {
+            throw Error("Obsidian is not running")
+        }
+        WinActivate(obsidianWindow)
+        WinWaitActive(obsidianWindow, , 5)
+        A_Clipboard := ""
+        Run("obsidian://copy-path")
+        if !ClipWait(5) {
+            throw Error("Copy Path did not copy an active Canvas path")
+        }
+        canvasPath := Trim(A_Clipboard)
+        FileAppend(canvasPath, "*", "UTF-8-RAW")
+    } finally {
+        A_Clipboard := savedClipboard
+        WinActivate("ahk_id " sourceWindow)
+    }
+}
 
 PasteFiles(directory, count, executable) {
     sourceWindow := WinExist("A")

@@ -2,7 +2,7 @@
   "name": "vscode-clipper",
   "displayName": "vscode-clipper",
   "description": "vscode clip to draw.io",
-  "version": "0.4.8",
+  "version": "0.5.2",
   "repository": {
     "type": "git",
     "url": "https://github.com/sunb256/vscode-clipper.git"
@@ -18,8 +18,10 @@
     "onCommand:vscode-clipper.stackSelection",
     "onCommand:vscode-clipper.stackPreviousGroup",
     "onCommand:vscode-clipper.clipAndPaste",
+    "onCommand:vscode-clipper.clipAndAppendObsidian",
     "onCommand:vscode-clipper.pasteAll",
     "onCommand:vscode-clipper.clearStack",
+    "onCommand:vscode-clipper.appendObsidianCanvas",
     "onCommand:vscode-clipper.exportObsidianCanvas"
   ],
   "extensionKind": [
@@ -41,12 +43,20 @@
         "title": "Clipper: Paste Selection to draw.io"
       },
       {
+        "command": "vscode-clipper.clipAndAppendObsidian",
+        "title": "Clipper: Add Selection to Active Obsidian Canvas"
+      },
+      {
         "command": "vscode-clipper.pasteAll",
         "title": "Clipper: Paste All to draw.io"
       },
       {
         "command": "vscode-clipper.clearStack",
         "title": "Clipper: Clear Stack"
+      },
+      {
+        "command": "vscode-clipper.appendObsidianCanvas",
+        "title": "Clipper: Add All to Active Obsidian Canvas"
       },
       {
         "command": "vscode-clipper.exportObsidianCanvas",
@@ -62,6 +72,11 @@
       {
         "command": "vscode-clipper.stackPreviousGroup",
         "key": "ctrl+shift+alt+d",
+        "when": "editorTextFocus && editorHasSelection"
+      },
+      {
+        "command": "vscode-clipper.clipAndAppendObsidian",
+        "key": "shift+alt+d",
         "when": "editorTextFocus && editorHasSelection"
       }
     ],
