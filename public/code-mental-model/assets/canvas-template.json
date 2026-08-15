@@ -3,11 +3,38 @@
     {
       "id": "0123456789abcdef",
       "type": "text",
-      "text": "# 機能名\n\n## 概要\n\n機能の概要を記述する。\n\n## 動作フロー\n\n```mermaid\nflowchart TD\n    A[\"開始\"] --> B[\"完了\"]\n```\n\n## シーケンス\n\n```mermaid\nsequenceDiagram\n    actor User as ユーザー\n    participant Controller as ExampleController\n    participant Service as ExampleService\n    User->>Controller: execute(input)\n    Controller->>Service: run(input)\n    Service-->>Controller: result\n    Controller-->>User: 完了を通知する\n```\n\n## 実装の構成\n\n実装箇所を記述する。",
+      "text": "# 機能名\n\n## 概要\n\n機能の概要を記述する。",
       "x": 0,
       "y": 0,
       "width": 1000,
-      "height": 1400
+      "height": 240
+    },
+    {
+      "id": "1234567890abcdef",
+      "type": "text",
+      "text": "## 動作フロー\n\n```mermaid\nflowchart TD\n    A[\"開始\"] --> B[\"完了\"]\n```",
+      "x": 0,
+      "y": 320,
+      "width": 1000,
+      "height": 720
+    },
+    {
+      "id": "2345678901abcdef",
+      "type": "text",
+      "text": "## シーケンス\n\n```mermaid\nsequenceDiagram\n    actor User as ユーザー\n    participant Service as ExampleService\n    User->>Service: run(input)\n    Service-->>User: result\n```",
+      "x": 0,
+      "y": 1120,
+      "width": 1400,
+      "height": 550
+    },
+    {
+      "id": "3456789012abcdef",
+      "type": "text",
+      "text": "## 実装の構成\n\n- **操作を受け付ける**\n  - ユーザー操作を受け取り、機能の処理を開始する。\n  - [`src/example.ts [10-20]`](vscode://sunb256.vscode-clipper/open?repo=example-project&path=src%2Fexample.ts&line=10) — `registerCommand`\n\n- **主要処理を実行する**\n  - 対象データへ機能の中心となる処理を行う。\n  - [`src/service.ts [5-10]`](vscode://sunb256.vscode-clipper/open?repo=example-project&path=src%2Fservice.ts&line=5) — `ExampleService.run`",
+      "x": 0,
+      "y": 1750,
+      "width": 1000,
+      "height": 440
     }
   ],
   "edges": []

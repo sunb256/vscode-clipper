@@ -1,0 +1,50 @@
+{
+  "nodes": [
+    {
+      "id": "63b1b2b7be2f64f2",
+      "type": "text",
+      "text": "# 選択コードのスタック管理\n\n## 概要\n\nVS Codeで選択したコードをパス・行番号・シンタックス情報付きの項目へ変換し、後続の貼り付けやCanvas出力に使うグループ別FIFOスタックとして保持する。",
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 230
+    },
+    {
+      "id": "974a433929f093d3",
+      "type": "text",
+      "text": "## 動作フロー\n\n```mermaid\n%%{init: {\"flowchart\": {\"rankSpacing\": 20, \"nodeSpacing\": 20}}}%%\nflowchart TD\n    A[\"コード範囲を選択\"] --> B[\"パスと行番号をラベル化\"]\n    B --> C[\"リッチ形式とプレーン形式を取得\"]\n    C --> D[\"再利用可能な項目へ整形\"]\n    D --> E{\"追加先を選ぶ\"}\n    E -->|新規| F[\"新しいグループを作成\"]\n    E -->|直前| G[\"末尾グループへ追加\"]\n    F --> H[\"件数と内容をステータス表示\"]\n    G --> H\n```",
+      "x": 0,
+      "y": 310,
+      "width": 1000,
+      "height": 1032
+    },
+    {
+      "id": "f9a5b00bbe1b05af",
+      "type": "text",
+      "text": "## シーケンス\n\n```mermaid\nsequenceDiagram\n    actor User as ユーザー\n    participant VSCode as VS Code\n    participant Clipper as Clipper\n    participant PowerShell as clipboard.ps1\n    User->>VSCode: vscode-clipper.stackSelection\n    VSCode->>Clipper: stackSelection(true)\n    Clipper->>VSCode: editor.action.clipboardCopyAction\n    Clipper->>PowerShell: readClipboard()\n    PowerShell-->>Clipper: HTMLとテキスト\n    Clipper->>Clipper: createClipItem(...)\n    Clipper->>Clipper: appendStackItem(...)\n    Clipper-->>User: updateStatus()\n```",
+      "x": 0,
+      "y": 1422,
+      "width": 1400,
+      "height": 735
+    },
+    {
+      "id": "004dd9ea0864e079",
+      "type": "text",
+      "text": "## 実装の構成\n\n\n- **スタック操作を登録する**\n  - 新規グループ追加、直前グループ追加、全消去のコマンドをVS Codeへ登録する。\n  - [`src/extension.ts [203-217]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=203) — `Clipper.register`\n\n- **選択範囲をラベル化する**\n  - アクティブな選択範囲からワークスペース相対パスと1始まりの行範囲を組み立てる。\n  - [`src/extension.ts [446-483]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=446) — `Clipper.captureSelection`, `Clipper.getDisplayPath`\n  - [`src/extension.ts [93-102]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=93) — `selectedLines`, `formatPath`\n\n- **クリップボード形式を取得する**\n  - VS Codeのコピー結果をPowerShell経由でHTMLとプレーンテキストの両形式として読み出す。\n  - [`src/extension.ts [485-500]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=485) — `Clipper.readClipboard`\n  - [`helper/clipboard.ps1 [14-21]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=helper%2Fclipboard.ps1&line=14) — `get` mode\n\n- **スタック項目を整形する**\n  - パスラベルをHTML断片とテキストへ付加し、コードと言語IDを保持する項目へまとめる。\n  - [`src/extension.ts [124-141]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=124) — `createClipItem`\n\n- **グループへ追加する**\n  - 操作種別に応じて新規グループを作るか末尾グループへ項目を追加する。\n  - [`src/extension.ts [79-85]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=79) — `appendStackItem`\n  - [`src/extension.ts [305-315]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=305) — `Clipper.stackSelection`\n\n- **状態を利用者へ示す**\n  - スタック内の総件数とFIFO順の項目・グループ境界をステータスバーへ反映する。\n  - [`src/extension.ts [104-113]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=104) — `queueTooltip`\n  - [`src/extension.ts [565-569]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=565) — `Clipper.updateStatus`",
+      "x": 0,
+      "y": 2237,
+      "width": 1000,
+      "height": 1040
+    },
+    {
+      "id": "9604896159d2f690",
+      "type": "text",
+      "text": "## 補足\n\nスタックは拡張機能インスタンスのメモリ内にあり、現在のVS Codeウィンドウを越えて永続化されない。",
+      "x": 0,
+      "y": 3357,
+      "width": 1000,
+      "height": 220
+    }
+  ],
+  "edges": []
+}

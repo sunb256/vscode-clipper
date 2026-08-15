@@ -1,0 +1,50 @@
+{
+  "nodes": [
+    {
+      "id": "0f025f49fe139bf3",
+      "type": "text",
+      "text": "# Obsidian Canvasのズーム感度調整\n\n## 概要\n\nObsidian Canvas上のホイール入力だけを対象に移動量を設定倍率で補正し、標準より緩やかなズーム操作を提供する。",
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 230
+    },
+    {
+      "id": "99d78273b3d5a1cd",
+      "type": "text",
+      "text": "## 動作フロー\n\n```mermaid\n%%{init: {\"flowchart\": {\"rankSpacing\": 20, \"nodeSpacing\": 20}}}%%\nflowchart TD\n    A[\"保存済み感度を読み込む\"] --> B[\"開いているCanvasを追跡\"]\n    B --> C[\"ホイール入力を監視\"]\n    C --> D{\"Canvas上の対象ジェスチャーか\"}\n    D -->|いいえ| E[\"元の入力を維持\"]\n    D -->|はい| F[\"移動量へ感度を適用\"]\n    F --> G[\"補正済みイベントを再送\"]\n    H[\"設定画面で感度を変更\"] --> I[\"範囲を正規化して保存\"]\n    I --> F\n```",
+      "x": 0,
+      "y": 310,
+      "width": 1000,
+      "height": 1032
+    },
+    {
+      "id": "6be34849d3f82530",
+      "type": "text",
+      "text": "## シーケンス\n\n```mermaid\nsequenceDiagram\n    actor User as ユーザー\n    participant Plugin as CanvasZoomSensitivityPlugin\n    participant Settings as CanvasZoomSettingTab\n    participant Controller as ZoomController\n    participant Obsidian as Obsidian\n    Plugin->>Plugin: loadSettings()\n    Plugin->>Controller: start()\n    Controller->>Obsidian: workspace.on(layout-change)\n    User->>Obsidian: wheel\n    Obsidian->>Controller: handleWheel(event)\n    Controller->>Controller: shouldAdjust(event)\n    Controller->>Controller: createWheelEvent(event, sensitivity)\n    Controller->>Obsidian: dispatchEvent(adjusted)\n    opt 感度を変更\n        User->>Settings: onChange(value)\n        Settings->>Plugin: updateSensitivity(value)\n    end\n```",
+      "x": 0,
+      "y": 1422,
+      "width": 1400,
+      "height": 885
+    },
+    {
+      "id": "df1749e3a584fcd4",
+      "type": "text",
+      "text": "## 実装の構成\n\n\n- **感度設定を読み込む**\n  - プラグイン起動時に保存値を既定値へ重ね、許容範囲へ正規化してコントローラへ提供する。\n  - [`public/obsidian-plugin/canvas-zoom-sensitivity/src/main.ts [10-37]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=public%2Fobsidian-plugin%2Fcanvas-zoom-sensitivity%2Fsrc%2Fmain.ts&line=10) — `CanvasZoomSensitivityPlugin`\n  - [`public/obsidian-plugin/canvas-zoom-sensitivity/src/settings.ts [8-18]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=public%2Fobsidian-plugin%2Fcanvas-zoom-sensitivity%2Fsrc%2Fsettings.ts&line=8) — `DEFAULT_SETTINGS`, `normalizeSensitivity`\n\n- **Canvas表示領域を追跡する**\n  - 起動時とレイアウト変更時にCanvasビューを列挙し、対象DOMとウィンドウを監視対象へ登録する。\n  - [`public/obsidian-plugin/canvas-zoom-sensitivity/src/zoom-controller.ts [17-55]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=public%2Fobsidian-plugin%2Fcanvas-zoom-sensitivity%2Fsrc%2Fzoom-controller.ts&line=17) — `ZoomController.start`, `ZoomController.refreshCanvasRoots`\n\n- **対象ジェスチャーを判定する**\n  - Canvas内のホイール入力を認識し、修飾キー付き操作と再送イベントを除外する。\n  - [`public/obsidian-plugin/canvas-zoom-sensitivity/src/zoom-controller.ts [58-96]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=public%2Fobsidian-plugin%2Fcanvas-zoom-sensitivity%2Fsrc%2Fzoom-controller.ts&line=58) — `ZoomController.handleWheel`, `ZoomController.shouldAdjust`\n\n- **ホイール量を補正する**\n  - 元イベントの属性を保ったまま`deltaY`へ感度倍率を掛けた合成イベントを生成する。\n  - [`public/obsidian-plugin/canvas-zoom-sensitivity/src/zoom-controller.ts [98-124]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=public%2Fobsidian-plugin%2Fcanvas-zoom-sensitivity%2Fsrc%2Fzoom-controller.ts&line=98) — `ZoomController.createWheelEvent`\n\n- **補正イベントをCanvasへ渡す**\n  - 元イベントを停止し、循環処理を防ぐ印を付けた補正済みイベントを同じ対象へ再送する。\n  - [`public/obsidian-plugin/canvas-zoom-sensitivity/src/zoom-controller.ts [58-76]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=public%2Fobsidian-plugin%2Fcanvas-zoom-sensitivity%2Fsrc%2Fzoom-controller.ts&line=58) — `ZoomController.handleWheel`\n\n- **利用者の感度変更を保存する**\n  - 設定タブのスライダー値をプラグインへ渡し、0.05から1.00の範囲へ正規化して永続化する。\n  - [`public/obsidian-plugin/canvas-zoom-sensitivity/src/settings.ts [20-41]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=public%2Fobsidian-plugin%2Fcanvas-zoom-sensitivity%2Fsrc%2Fsettings.ts&line=20) — `CanvasZoomSettingTab.display`\n  - [`public/obsidian-plugin/canvas-zoom-sensitivity/src/main.ts [25-28]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=public%2Fobsidian-plugin%2Fcanvas-zoom-sensitivity%2Fsrc%2Fmain.ts&line=25) — `CanvasZoomSensitivityPlugin.updateSensitivity`",
+      "x": 0,
+      "y": 2387,
+      "width": 1000,
+      "height": 956
+    },
+    {
+      "id": "5df9d1b3072aef27",
+      "type": "text",
+      "text": "## 補足\n\n感度が1の場合または先行処理で既にキャンセルされたイベントは変更せず、Ctrlはトラックパッドのピンチズーム互換のため許可される。",
+      "x": 0,
+      "y": 3423,
+      "width": 1000,
+      "height": 220
+    }
+  ],
+  "edges": []
+}

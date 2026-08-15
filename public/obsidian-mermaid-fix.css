@@ -25,6 +25,24 @@
 }
 
 /* ================================
+   Light Mermaid surface in dark mode
+   ================================ */
+
+.theme-dark .mermaid {
+    color-scheme: light !important;
+    background: #ffffff !important;
+    border: 1px solid #d0d7de !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+}
+
+/* Obsidian 1.8.3+ inverts Mermaid SVGs in dark mode. Keep the original
+   light Mermaid colors instead of inverting the complete rendered image. */
+.theme-dark .mermaid > svg {
+    filter: none !important;
+}
+
+/* ================================
    Neutral Canvas node borders
    ================================ */
 
@@ -69,7 +87,7 @@
 }
 
 .mermaid .actor-line {
-    stroke: #8f969f !important;
+    stroke: #b9bed2 !important;
     stroke-width: 1.5px !important;
     opacity: 1 !important;
 }

@@ -1,0 +1,50 @@
+{
+  "nodes": [
+    {
+      "id": "6e6a76842597242f",
+      "type": "text",
+      "text": "# コード位置リンクからのファイル表示\n\n## 概要\n\nMarkdownやObsidian上の専用`vscode:`リンクを受け取り、指定プロジェクトの対象ファイルと開始行を再利用可能なVS Codeペインへ表示する。",
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 230
+    },
+    {
+      "id": "a9b38833c72a41fe",
+      "type": "text",
+      "text": "## 動作フロー\n\n```mermaid\n%%{init: {\"flowchart\": {\"rankSpacing\": 20, \"nodeSpacing\": 20}}}%%\nflowchart TD\n    A[\"コード位置リンクを開く\"] --> B[\"プロジェクト・パス・行を検証\"]\n    B --> C{\"現在のウィンドウに対象があるか\"}\n    C -->|ある| D[\"対象ファイルを検証して開く\"]\n    C -->|ない| E[\"対象プロジェクトのウィンドウを前面化\"]\n    E --> F[\"リンクを一度だけ再送\"]\n    F --> D\n    D --> G[\"表示ペインを選択または再利用\"]\n    G --> H[\"指定行へ移動して中央表示\"]\n```",
+      "x": 0,
+      "y": 310,
+      "width": 1000,
+      "height": 1032
+    },
+    {
+      "id": "ee2d0a6db4e2c79f",
+      "type": "text",
+      "text": "## シーケンス\n\n```mermaid\nsequenceDiagram\n    actor User as ユーザー\n    participant VSCode as VS Code\n    participant Clipper as Clipper\n    participant Helper as vscode-clipper.ahk\n    User->>VSCode: vscode://sunb256.vscode-clipper/open\n    VSCode->>Clipper: handleUri(uri)\n    Clipper->>Clipper: parseCodeLink(uri)\n    Clipper->>Clipper: findWorkspace(...)\n    alt 対象ワークスペースが現在のウィンドウにある\n        Clipper->>Clipper: openCode(folder, link)\n    else 別ウィンドウにある\n        Clipper->>Helper: focus-vscode\n        Helper->>VSCode: Run(retryUri)\n        VSCode->>Clipper: handleUri(retryUri)\n        Clipper->>Clipper: openCode(folder, link)\n    end\n    Clipper-->>User: 指定行を表示\n```",
+      "x": 0,
+      "y": 1422,
+      "width": 1400,
+      "height": 908
+    },
+    {
+      "id": "e672ac1279627979",
+      "type": "text",
+      "text": "## 実装の構成\n\n\n- **URIハンドラを登録する**\n  - 拡張機能の起動時に専用URIを`Clipper.handleUri`へ渡すハンドラをVS Codeへ登録する。\n  - [`src/extension.ts [203-217]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=203) — `Clipper.register`\n\n- **リンク内容を検証する**\n  - `/open`パスと必須クエリを読み取り、絶対パスやパストラバーサル、不正な行番号を拒否する。\n  - [`src/extension.ts [38-66]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=38) — `parseCodeLink`, `isSafeRelativePath`\n\n- **対象ワークスペースを探す**\n  - リンクのリポジトリ名と一致する現在のワークスペースフォルダを大文字・小文字を区別せず検索する。\n  - [`src/extension.ts [52-59]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=52) — `findWorkspace`\n  - [`src/extension.ts [219-236]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=219) — `Clipper.handleUri`\n\n- **別ウィンドウへ引き渡す**\n  - 対象が見つからない場合はプロジェクト名を含むVS Codeウィンドウを前面化し、再試行印付きURIを一度だけ送る。\n  - [`src/extension.ts [227-233]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=227) — `Clipper.handleUri`\n  - [`helper/vscode-clipper.ahk [25-44]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=helper%2Fvscode-clipper.ahk&line=25) — `FocusVscode`, `FindVscodeWindow`\n\n- **表示ペインを決定する**\n  - 設定に従って現在のペインまたは左側の再利用可能なコード表示ペインを選ぶ。\n  - [`src/extension.ts [27-36]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=27) — `codeLinkColumn`\n  - [`src/extension.ts [249-267]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=249) — `Clipper.openCode`\n\n- **ファイルと行を表示する**\n  - 対象ファイルの存在と行範囲を確認してプレビュー表示し、カーソルと表示領域を指定行へ移動する。\n  - [`src/extension.ts [238-270]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=238) — `Clipper.openCode`",
+      "x": 0,
+      "y": 2410,
+      "width": 1000,
+      "height": 998
+    },
+    {
+      "id": "79fbf0c1607ba714",
+      "type": "text",
+      "text": "## 補足\n\n別ウィンドウへの切り替えはWindows限定で、対象プロジェクトを開いたVS Codeウィンドウのタイトルにリポジトリ名が含まれる必要がある。",
+      "x": 0,
+      "y": 3488,
+      "width": 1000,
+      "height": 220
+    }
+  ],
+  "edges": []
+}

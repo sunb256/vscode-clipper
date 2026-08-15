@@ -1,0 +1,14 @@
+{
+  "nodes": [
+    {
+      "id": "0123456789abcdef",
+      "type": "text",
+      "text": "# 機能名\n\n## 概要\n\n機能の概要を記述する。\n\n## 動作フロー\n\n```mermaid\nflowchart TD\n    A[\"開始\"] --> B[\"完了\"]\n```\n\n## シーケンス\n\n```mermaid\nsequenceDiagram\n    actor User as ユーザー\n    participant Controller as ExampleController\n    participant Service as ExampleService\n    User->>Controller: execute(input)\n    Controller->>Service: run(input)\n    Service-->>Controller: result\n    Controller-->>User: 完了を通知する\n```\n\n## 実装の構成\n\n実装箇所を記述する。",
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 1400
+    }
+  ],
+  "edges": []
+}

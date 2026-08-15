@@ -1,0 +1,50 @@
+{
+  "nodes": [
+    {
+      "id": "c3d78a130cfe4cb5",
+      "type": "text",
+      "text": "# draw.ioへの貼り付け\n\n## 概要\n\n選択コードまたは蓄積済みグループをリッチクリップボードデータへ変換し、Windows上のdraw.io Desktopへ順番に貼り付ける。",
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 230
+    },
+    {
+      "id": "6628dcfcee30f3cd",
+      "type": "text",
+      "text": "## 動作フロー\n\n```mermaid\n%%{init: {\"flowchart\": {\"rankSpacing\": 20, \"nodeSpacing\": 20}}}%%\nflowchart TD\n    A[\"単一選択またはスタックを受け付ける\"] --> B[\"グループ内の項目を結合\"]\n    B --> C[\"一時ファイルへ書き出す\"]\n    C --> D[\"draw.ioを起動または前面化\"]\n    D --> E[\"クリップボードを順次復元\"]\n    E --> F[\"各項目を貼り付ける\"]\n    F --> G[\"成功したスタックを消去\"]\n```",
+      "x": 0,
+      "y": 310,
+      "width": 1000,
+      "height": 936
+    },
+    {
+      "id": "3f2ecc6d51e6d2d0",
+      "type": "text",
+      "text": "## シーケンス\n\n```mermaid\nsequenceDiagram\n    actor User as ユーザー\n    participant VSCode as VS Code\n    participant Clipper as Clipper\n    participant Helper as vscode-clipper.ahk\n    participant PowerShell as clipboard.ps1\n    participant Drawio as draw.io Desktop\n    User->>VSCode: vscode-clipper.pasteAll\n    VSCode->>Clipper: pasteAll()\n    Clipper->>Clipper: pasteGroups(pending)\n    Clipper->>Helper: paste-files\n    loop 貼り付け項目\n        Helper->>PowerShell: SetClipboard(...)\n        PowerShell-->>Helper: HTMLとテキストを設定\n        Helper->>Drawio: Ctrl+Shift+A / Ctrl+V\n    end\n    Clipper-->>User: updateStatus()\n```",
+      "x": 0,
+      "y": 1326,
+      "width": 1400,
+      "height": 855
+    },
+    {
+      "id": "a312d7533d9484ef",
+      "type": "text",
+      "text": "## 実装の構成\n\n\n- **貼り付け対象を確定する**\n  - 単一選択は即時項目化し、スタックは処理開始時のグループ構成を複製して対象を固定する。\n  - [`src/extension.ts [317-331]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=317) — `Clipper.clipAndPaste`\n  - [`src/extension.ts [351-368]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=351) — `Clipper.pasteAll`, `Clipper.pasteStack`\n\n- **グループを貼り付け単位へ結合する**\n  - 同じグループのHTML断片とテキストを間隔付きで一つのクリップボード項目へまとめる。\n  - [`src/extension.ts [115-122]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=115) — `mergeGroup`\n  - [`src/extension.ts [514-516]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=514) — `Clipper.pasteGroups`\n\n- **一時ファイルを準備する**\n  - 各貼り付け項目のHTML形式とテキスト形式を一時ディレクトリへ対で保存する。\n  - [`src/extension.ts [502-524]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=502) — `Clipper.pasteItems`, `Clipper.writeItems`\n\n- **draw.ioを操作する**\n  - AutoHotkeyがdraw.ioを起動または前面化し、各項目をFIFO順に貼り付ける。\n  - [`helper/vscode-clipper.ahk [69-99]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=helper%2Fvscode-clipper.ahk&line=69) — `PasteFiles`, `EnsureDrawio`\n\n- **リッチクリップボードを復元する**\n  - PowerShellが一時ファイルからHTMLとUnicodeテキストをWindowsクリップボードへ同時設定する。\n  - [`helper/vscode-clipper.ahk [101-110]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=helper%2Fvscode-clipper.ahk&line=101) — `SetClipboard`\n  - [`helper/clipboard.ps1 [24-29]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=helper%2Fclipboard.ps1&line=24) — `set` mode\n\n- **成功後の状態を更新する**\n  - 全グループの貼り付けが完了した場合だけスタックを空にしてステータス表示を更新する。\n  - [`src/extension.ts [355-367]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=355) — `Clipper.pasteStack`",
+      "x": 0,
+      "y": 2261,
+      "width": 1000,
+      "height": 998
+    },
+    {
+      "id": "430f17d06df10244",
+      "type": "text",
+      "text": "## 補足\n\nAutoHotkey連携はWindows限定で、途中失敗時には再実行できるよう元のスタックが保持される。",
+      "x": 0,
+      "y": 3339,
+      "width": 1000,
+      "height": 220
+    }
+  ],
+  "edges": []
+}

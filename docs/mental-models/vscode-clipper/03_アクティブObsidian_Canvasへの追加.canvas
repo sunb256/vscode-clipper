@@ -1,0 +1,50 @@
+{
+  "nodes": [
+    {
+      "id": "5d131711420b99c1",
+      "type": "text",
+      "text": "# アクティブObsidian Canvasへの追加\n\n## 概要\n\n単一の選択コードまたはスタック全体を、Obsidianで現在開いているCanvasの既存内容より下へ追記する。",
+      "x": 0,
+      "y": 0,
+      "width": 1000,
+      "height": 230
+    },
+    {
+      "id": "39dc8859d4989cd8",
+      "type": "text",
+      "text": "## 動作フロー\n\n```mermaid\n%%{init: {\"flowchart\": {\"rankSpacing\": 20, \"nodeSpacing\": 20}}}%%\nflowchart TD\n    A[\"追加対象を確定\"] --> B[\"Obsidianを前面化\"]\n    B --> C[\"開いているCanvasの絶対パスを取得\"]\n    C --> D[\"既存Canvasを検証\"]\n    D --> E[\"コード項目をCanvasノード化\"]\n    E --> F[\"既存内容の下へ配置\"]\n    F --> G[\"Canvasを安全に置換\"]\n    G --> H[\"スタック利用時は成功後に消去\"]\n```",
+      "x": 0,
+      "y": 310,
+      "width": 1000,
+      "height": 984
+    },
+    {
+      "id": "be5260d2749b1b69",
+      "type": "text",
+      "text": "## シーケンス\n\n```mermaid\nsequenceDiagram\n    actor User as ユーザー\n    participant Clipper as Clipper\n    participant Helper as vscode-clipper.ahk\n    participant CopyPath as CopyPathPlugin\n    participant Canvas as canvas.ts\n    User->>Clipper: appendActiveCanvas()\n    Clipper->>Helper: active-canvas\n    Helper->>CopyPath: obsidian://copy-path\n    CopyPath-->>Helper: copyCanvasPath(false)\n    Helper-->>Clipper: Canvas絶対パス\n    Clipper->>Canvas: appendCanvasFile(destination, pending)\n    Canvas->>Canvas: createCanvas(groups)\n    Canvas->>Canvas: appendCanvas(existing, addition)\n    Clipper-->>User: 完了を通知\n```",
+      "x": 0,
+      "y": 1374,
+      "width": 1400,
+      "height": 795
+    },
+    {
+      "id": "81d3bd05e9af2a51",
+      "type": "text",
+      "text": "## 実装の構成\n\n\n- **追加対象を確定する**\n  - 単一選択は一項目のグループとし、スタック追加は現在の全グループを複製して処理中の対象を固定する。\n  - [`src/extension.ts [333-349]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=333) — `Clipper.clipAndAppend`\n  - [`src/extension.ts [420-435]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=420) — `Clipper.appendActiveCanvas`\n\n- **アクティブCanvasのパスを要求する**\n  - AutoHotkeyを起動し、Obsidian側で開かれているCanvasの絶対パスを標準出力から受け取る。\n  - [`src/extension.ts [437-444]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=437) — `Clipper.activeCanvasPath`\n  - [`helper/vscode-clipper.ahk [46-67]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=helper%2Fvscode-clipper.ahk&line=46) — `CopyActiveCanvasPath`\n\n- **Obsidianから実ファイル位置を返す**\n  - プロトコルハンドラがアクティブファイルをCanvasかつローカルファイルと確認し、絶対パスをクリップボードへ書く。\n  - [`public/obsidian-plugin/copy-path/src/main.ts [5-39]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=public%2Fobsidian-plugin%2Fcopy-path%2Fsrc%2Fmain.ts&line=5) — `CopyPathPlugin`\n\n- **コード項目をCanvasへ配置する**\n  - コード長と表示行数からノード寸法を求め、グループ構成に応じてテキストノードとグループ枠を生成する。\n  - [`src/canvas.ts [33-80]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fcanvas.ts&line=33) — `createCanvas`, `layoutGroup`\n  - [`src/canvas.ts [82-123]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fcanvas.ts&line=82) — `nodeWidth`, `nodeHeight`, `fencedCode`\n\n- **既存内容の下へ追記する**\n  - 既存Canvasの最下端と追加内容の最上端からオフセットを計算し、既存ノードとエッジを維持して結合する。\n  - [`src/canvas.ts [142-166]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fcanvas.ts&line=142) — `appendCanvas`, `appendCanvasFile`\n\n- **成功後の状態を確定する**\n  - スタック全件追加ではファイル更新成功後だけスタックを消去し、単一選択の直接追加ではスタックへ影響を与えない。\n  - [`src/extension.ts [333-349]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=333) — `Clipper.clipAndAppend`\n  - [`src/extension.ts [420-435]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=src%2Fextension.ts&line=420) — `Clipper.appendActiveCanvas`",
+      "x": 0,
+      "y": 2249,
+      "width": 1000,
+      "height": 1040
+    },
+    {
+      "id": "3cbaf94231fef56a",
+      "type": "text",
+      "text": "## 補足\n\nアクティブCanvasの特定にはWindows上のAutoHotkeyと同梱のObsidian `copy-path`プラグインが必要である。",
+      "x": 0,
+      "y": 3369,
+      "width": 1000,
+      "height": 220
+    }
+  ],
+  "edges": []
+}
