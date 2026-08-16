@@ -11,7 +11,7 @@ Create a compact, code-grounded guide that shows:
 2. the interaction order between the major participants
 3. what each major part does in one sentence
 4. where each part is implemented
-5. the same complete guide available independently as Markdown and Obsidian Canvas
+5. the same complete guide available independently as Markdown and a sectioned Obsidian Canvas
 
 ## Workflow
 
@@ -81,14 +81,20 @@ Read `assets/category-template.md` and follow its structure.
 For each responsibility represented by the flow, write exactly this shape:
 
 ```markdown
-- **選択内容を取得する**：VS Codeの選択範囲、ファイル情報、言語IDを処理用データへまとめる。
+- **選択内容を取得する**
+  - 選択範囲とファイル情報を処理用データへまとめる。
   - [`src/extension.ts [20-35]`](vscode://sunb256.vscode-clipper/open?repo=example-project&path=src%2Fextension.ts&line=20) — `captureSelection`
   - [`src/extension.ts [120-130]`](vscode://sunb256.vscode-clipper/open?repo=example-project&path=src%2Fextension.ts&line=120) — `createClipItem`
 ```
 
 Apply these rules:
 
-- Keep the explanation to one sentence.
+- Put only the bold responsibility name on the top-level bullet line.
+- Never append `：`, an explanation, a code symbol, or any other prose after the closing `**` on that line.
+- Put the explanation in the first indented child bullet, followed by the code-location child bullets at the same indentation.
+- Keep the responsibility name short and action-oriented, preferably 8–20 Japanese characters.
+- Keep the explanation to one short sentence, preferably no more than 60 Japanese characters, describing only the responsibility's purpose or outcome.
+- Move command variants, branch details, implementation mechanics, and secondary effects to the diagrams or supplemental notes unless they are essential to distinguish the responsibility.
 - List 1–3 code locations that best represent the responsibility.
 - Use repository-relative paths and code position plus symbol names.
 - Render every code location as a Markdown link whose label remains the repository-relative
@@ -136,25 +142,41 @@ Create a standalone Obsidian Canvas beside the Markdown document with the same b
 docs/mental-models/<feature>.canvas
 ```
 
-Read `assets/canvas-template.json` and follow its structure. Put the complete Markdown document into the `text` property of a Canvas text node. Do not create a file node or reference an external Markdown file.
+Read `assets/canvas-template.json` and follow its structure. Split the Markdown document into self-contained Canvas text nodes so readers can scan, move, and connect each part independently. Do not create a file node or reference an external Markdown file.
 
 Apply these rules:
 
 - Write valid JSON containing top-level `nodes` and `edges` arrays.
-- Use one `text` node by default with `x: 0`, `y: 0`, `width: 1000`, and `height: 1400`.
-- Set `text` to the complete document, including its headings, Mermaid blocks, implementation map, and supplemental notes.
-- Keep the generated text identical to the Markdown file content so the two outputs present the same guide while remaining independent.
+- Create one generated `text` node for each of these units:
+  - title and overview
+  - each flowchart
+  - the sequence diagram, when present
+  - the complete `実装の構成` section, including every responsibility, explanation, and code-location list
+  - supplemental notes, when present
+- Keep every section heading in the corresponding node so each node remains understandable when viewed alone.
+- Do not put the whole document into one generated node, but always keep all implementation responsibilities together in one `実装の構成` node.
+- Preserve the Markdown content verbatim within its assigned nodes. Concatenating generated node text in document order with exactly one blank line between nodes must reproduce the complete Markdown document.
+- Lay out generated nodes in document order from top to bottom:
+  - place the title and overview at `x: 0`, `y: 0`, `width: 1000`
+  - place flowcharts at `x: 0`, using `width: 1000`
+  - give each flowchart node twice the normal content-based height, with a minimum height of 720 pixels, so vertically oriented flows have enough room to render legibly
+  - place the sequence diagram at `x: 0`, using `width: 1400`, even though it does not align with the other 1000-pixel-wide nodes
+  - give the sequence-diagram node 1.25 times its normal content-based height, rounding up to the nearest whole pixel
+  - place the complete implementation section at `x: 0`, using `width: 1000`
+  - place supplemental notes below the implementation section at `x: 0`, using `width: 1000`
+  - leave at least 80 pixels of vertical space between rows and avoid overlapping nodes
+- Estimate each node height from its content with a minimum of 220 pixels; use more height for Mermaid blocks and long code-location lists so the node is readable without internal scrolling.
 - Serialize the Canvas with a JSON serializer so newlines, quotes, backslashes, and Unicode text are escaped correctly.
-- Use a deterministic lowercase hexadecimal node ID of at least 16 characters derived from the Canvas output path.
+- Use a deterministic lowercase hexadecimal node ID of at least 16 characters derived from the Canvas output path plus a stable section key such as `overview`, `flow-1`, `sequence`, `implementation`, or `notes`.
 - Keep `edges` empty unless the user explicitly requests a richer Canvas layout.
-- If the Canvas already exists, preserve user-added nodes and edges. Update the generated text node by its deterministic ID rather than duplicating it.
-- When migrating a Canvas created by the previous template, remove the old generated `file` node that references the same-base Markdown file and remove only edges connected to that node.
+- If the Canvas already exists, preserve user-added nodes and edges. Update generated text nodes by their deterministic IDs, add missing generated nodes, and remove stale generated nodes that use the same output-path-derived ID scheme.
+- When migrating a Canvas created by a previous template, merge old `responsibility-*` generated nodes into the single `implementation` node, remove the old whole-document `text` node or same-base Markdown `file` node, and remove only edges connected to removed nodes.
 - Never use a `file` node for the generated guide. Copying the `.canvas` file alone must preserve all generated content.
 - Respect a user-specified Canvas output path. If only one output path is specified, place the other output beside it with the same base name and the appropriate extension.
 
 ### 10. Copy Canvas files to Obsidian when requested
 
-The Canvas files are portable deliverables: each generated text node contains the complete guide and does not depend on its paired Markdown file.
+The Canvas files are portable deliverables: the generated text nodes collectively contain the complete guide and do not depend on the paired Markdown file.
 
 If the user supplies an Obsidian Vault directory and asks for installation or copying, copy every generated `.canvas` file to that directory after validation. Preserve the numbered filenames and create only the requested subdirectory. Do not overwrite an existing destination file unless the user explicitly allows replacement. Copy the Markdown files too only when requested.
 
@@ -170,13 +192,20 @@ Before finishing, confirm:
 - every implementation-map entry corresponds to a meaningful part of the flow
 - every path and symbol was verified in the repository
 - explanations are one sentence each
+- every implementation responsibility uses a title-only top-level bullet followed by one short explanation child bullet
+- no implementation responsibility appends `：` or explanatory prose to its bold title line
 - code-location lists contain only the most relevant locations
 - paths are repository-relative and no stale line numbers are used
 - every code-location link contains the repository name, relative path, and first line
 - the Markdown file exists at the reported path and contains the complete guide
 - the Canvas file exists at the reported path
 - the Canvas is valid JSON with `nodes` and `edges` arrays
-- exactly one generated `text` node contains content identical to the Markdown file
+- generated text nodes exist for the overview, every diagram, the complete implementation section, and supplemental notes when present
+- exactly one generated text node starts with `## 実装の構成` and contains every implementation responsibility in Markdown order
+- concatenating generated node text in document order with one blank line between nodes produces content identical to the Markdown file
+- generated nodes have deterministic unique IDs, do not overlap, and follow the prescribed layout
+- every flowchart node uses at least 720 pixels of height and approximately twice the normal content-based height
+- the sequence-diagram node uses exactly 1400 pixels of width and 1.25 times its normal content-based height, rounded up
 - no generated node depends on an external file
 
 In all-categories mode, also confirm:
@@ -184,7 +213,7 @@ In all-categories mode, also confirm:
 - every discovered category has exactly one numbered Markdown/Canvas pair
 - numbers are unique, two digits, ordered, and identical within each pair
 - category filenames match the recorded category list
-- every Markdown document has exactly one generated Canvas text node with identical content
+- every Markdown document has a sectioned Canvas whose ordered generated text nodes reconstruct identical content
 - no category was silently skipped after discovery
 
 ### 12. Report the result
