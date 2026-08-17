@@ -1,0 +1,145 @@
+/* ========================================
+   Monokai Code Highlight
+   Live Preview / Reading View 共通
+   ======================================== */
+
+.theme-dark {
+  /* コードブロック全体 */
+  --code-background: #272822;
+  --code-normal: #f8f8f2;
+
+  /* Syntax Highlight */
+  --code-comment: #75715e;
+  --code-function: #a6e22e;
+  --code-important: #fd971f;
+  --code-keyword: #f92672;
+  --code-operator: #f92672;
+  --code-property: #66d9ef;
+  --code-punctuation: #f8f8f2;
+  --code-string: #e6db74;
+  --code-tag: #f92672;
+  --code-value: #ae81ff;
+}
+
+
+/* ========================================
+   Live Preview
+   ======================================== */
+
+.markdown-source-view.mod-cm6 .cm-line.HyperMD-codeblock {
+  background-color: #272822;
+}
+
+/* comment */
+.markdown-source-view.mod-cm6
+.cm-line.HyperMD-codeblock .cm-comment {
+  color: #75715e !important;
+}
+
+/* keyword: def, class, if, return, import... */
+.markdown-source-view.mod-cm6
+.cm-line.HyperMD-codeblock .cm-keyword {
+  color: #f92672 !important;
+}
+
+/* string */
+.markdown-source-view.mod-cm6
+.cm-line.HyperMD-codeblock .cm-string,
+.markdown-source-view.mod-cm6
+.cm-line.HyperMD-codeblock .cm-string-2 {
+  color: #e6db74 !important;
+}
+
+/* number / True / False / None */
+.markdown-source-view.mod-cm6
+.cm-line.HyperMD-codeblock .cm-number,
+.markdown-source-view.mod-cm6
+.cm-line.HyperMD-codeblock .cm-atom {
+  color: #ae81ff !important;
+}
+
+/* function definition */
+.markdown-source-view.mod-cm6
+.cm-line.HyperMD-codeblock .cm-def {
+  color: #a6e22e !important;
+}
+
+/* builtin */
+.markdown-source-view.mod-cm6
+.cm-line.HyperMD-codeblock .cm-builtin {
+  color: #66d9ef !important;
+}
+
+/* operator */
+.markdown-source-view.mod-cm6
+.cm-line.HyperMD-codeblock .cm-operator {
+  color: #f92672 !important;
+}
+
+/* type / class */
+.markdown-source-view.mod-cm6
+.cm-line.HyperMD-codeblock .cm-type {
+  color: #66d9ef !important;
+}
+
+
+/* ========================================
+   Reading View
+   ======================================== */
+
+.markdown-rendered pre {
+  background-color: #272822 !important;
+}
+
+.markdown-rendered pre code {
+  color: #f8f8f2;
+}
+
+/* comment */
+.markdown-rendered .token.comment,
+.markdown-rendered .token.prolog,
+.markdown-rendered .token.doctype {
+  color: #75715e !important;
+}
+
+/* keyword */
+.markdown-rendered .token.keyword {
+  color: #f92672 !important;
+}
+
+/* strings */
+.markdown-rendered .token.string {
+  color: #e6db74 !important;
+}
+
+/* numbers / booleans */
+.markdown-rendered .token.number,
+.markdown-rendered .token.boolean {
+  color: #ae81ff !important;
+}
+
+/* function */
+.markdown-rendered .token.function {
+  color: #a6e22e !important;
+}
+
+/* class */
+.markdown-rendered .token.class-name,
+.markdown-rendered .token.builtin {
+  color: #66d9ef !important;
+}
+
+/* operators */
+.markdown-rendered .token.operator {
+  color: #f92672 !important;
+}
+
+/* property */
+.markdown-rendered .token.property {
+  color: #66d9ef !important;
+}
+
+/* punctuation */
+.markdown-rendered .token.punctuation {
+  color: #f8f8f2 !important;
+}

@@ -26,7 +26,7 @@ const groupGap = 200;
 const groupPadding = 100;
 const outerPadding = 12;
 const textLineHeight = 24;
-const codeLineHeight = 19;
+const codeLineHeight = 20;
 const contentGap = 20;
 const codePadding = 8;
 

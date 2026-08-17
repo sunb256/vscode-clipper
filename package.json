@@ -3,13 +3,13 @@
   "publisher": "sunb256",
   "displayName": "vscode-clipper",
   "description": "vscode clip to draw.io",
-  "version": "0.5.9",
+  "version": "0.6.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/sunb256/vscode-clipper.git"
   },
   "engines": {
-    "vscode": "^1.125.0"
+    "vscode": "^1.100.0"
   },
   "categories": [
     "Other"
@@ -135,7 +135,7 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.125.0",
+    "@types/vscode": "1.100.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "24.x",
     "typescript-eslint": "^8.61.1",
