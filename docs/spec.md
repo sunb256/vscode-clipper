@@ -14,10 +14,11 @@ VS Codeで選択したコードを、相対パスと行番号付きでdraw.io De
 - AutoHotkey v2
 
 拡張機能は`UI Extension`としてWindows側で動作する。Remote SSH利用時も、Windows側のClipboard、AutoHotkey、draw.ioを使用する。
+PowerShellとバッチファイルには依存せず、AutoHotkey v2からWindows APIを直接呼び出してClipboardのHTML形式とUnicodeテキスト形式を操作する。
 
 ## 操作
 
-コードを選択して`Ctrl+Shift+D`を実行するとFIFOスタックへ追加する。ステータスバーをクリックすると、Obsidianで現在開いているCanvasへ追記する。コマンドパレットのPaste Allではdraw.ioへ全件を貼り付ける。
+コードを選択して`Ctrl+Shift+D`を実行するとFIFOスタックへ追加する。ステータスバーをクリックすると、設定された貼り付け先へ全件を送る。既定ではObsidianで現在開いているCanvasへ追記し、`draw.io`設定時はdraw.io Desktopへ貼り付ける。コマンドパレットのPaste Allでは設定にかかわらずdraw.ioへ全件を貼り付ける。
 
 ```text
 コードを選択
@@ -88,10 +89,13 @@ async function getUser() {
 {
   "vscode-clipper.autoHotkeyPath": "",
   "vscode-clipper.drawioExecutable": "",
+  "vscode-clipper.statusBarTarget": "obsidian",
   "vscode-clipper.includeLineNumbers": true,
   "vscode-clipper.includeWorkspaceFolder": true
 }
 ```
+
+`statusBarTarget`が`obsidian`の場合、ステータスバークリックでアクティブなObsidian Canvasへ追記する。`draw.io`の場合は、同じクリック操作でStackをdraw.io Desktopへ貼り付ける。設定変更は再起動なしで反映する。
 
 ## エラー処理
 

@@ -3,7 +3,7 @@
   "publisher": "sunb256",
   "displayName": "vscode-clipper",
   "description": "vscode clip to draw.io",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/sunb256/vscode-clipper.git"
@@ -94,6 +94,19 @@
           "type": "string",
           "default": "",
           "description": "Path to draw.io.exe. Used to start draw.io when it is not running."
+        },
+        "vscode-clipper.statusBarTarget": {
+          "type": "string",
+          "enum": [
+            "obsidian",
+            "draw.io"
+          ],
+          "enumDescriptions": [
+            "Add the stack to the active Obsidian Canvas.",
+            "Paste the stack into draw.io Desktop."
+          ],
+          "default": "obsidian",
+          "description": "Choose where clicking the Clipper status bar item sends the stack."
         },
         "vscode-clipper.includeLineNumbers": {
           "type": "boolean",

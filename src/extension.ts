@@ -23,6 +23,13 @@ export interface CodeLink {
 }
 
 export type CodeLinkLocation = 'beside' | 'current';
+export type StatusBarTarget = 'obsidian' | 'draw.io';
+
+export function statusBarCommand(target: StatusBarTarget): string {
+	return target === 'draw.io'
+		? 'vscode-clipper.pasteAll'
+		: 'vscode-clipper.appendObsidianCanvas';
+}
 
 export function codeLinkColumn(
 	location: CodeLinkLocation,
@@ -196,7 +203,6 @@ class Clipper {
 			vscode.StatusBarAlignment.Left,
 			Number.MIN_SAFE_INTEGER,
 		);
-		this.status.command = 'vscode-clipper.appendObsidianCanvas';
 		this.context.subscriptions.push(this.status);
 	}
 
@@ -211,6 +217,11 @@ class Clipper {
 		this.addCommand('vscode-clipper.exportObsidianCanvas', () => this.exportCanvas());
 		this.context.subscriptions.push(vscode.window.registerUriHandler({
 			handleUri: (uri) => this.handleUri(uri),
+		}));
+		this.context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
+			if (event.affectsConfiguration('vscode-clipper.statusBarTarget')) {
+				this.updateStatus();
+			}
 		}));
 		this.updateStatus();
 		this.status.show();
@@ -488,7 +499,7 @@ class Clipper {
 		try {
 			const htmlPath = path.join(tempDir, 'clipboard.html');
 			const textPath = path.join(tempDir, 'clipboard.txt');
-			await this.runPowerShell('get', htmlPath, textPath);
+			await this.runHelper('read-clipboard', htmlPath, textPath);
 			const [html, text] = await Promise.all([
 				fs.promises.readFile(htmlPath, 'utf8'),
 				fs.promises.readFile(textPath, 'utf8'),
@@ -523,14 +534,6 @@ class Clipper {
 		await Promise.all(writes);
 	}
 
-	private runPowerShell(mode: string, htmlPath: string, textPath: string): Promise<void> {
-		const script = this.context.asAbsolutePath(path.join('helper', 'clipboard.ps1'));
-		return this.exec('powershell.exe', [
-			'-NoProfile', '-STA', '-ExecutionPolicy', 'Bypass', '-File', script,
-			'-Mode', mode, '-HtmlPath', htmlPath, '-TextPath', textPath,
-		]);
-	}
-
 	private runHelper(...args: string[]): Promise<string> {
 		const executable = this.configValue('autoHotkeyPath') || 'AutoHotkey64.exe';
 		const script = this.context.asAbsolutePath(path.join('helper', 'vscode-clipper.ahk'));
@@ -546,12 +549,6 @@ class Clipper {
 		});
 	}
 
-	private exec(file: string, args: string[]): Promise<void> {
-		return new Promise((resolve, reject) => {
-			execFile(file, args, (error) => error ? reject(error) : resolve());
-		});
-	}
-
 	private requireWindows(): void {
 		if (process.platform !== 'win32') {
 			throw new Error('AutoHotkey integration is available on Windows only');
@@ -564,8 +561,11 @@ class Clipper {
 
 	private updateStatus(): void {
 		const itemCount = this.groups.reduce((count, group) => count + group.length, 0);
+		const target = vscode.workspace.getConfiguration('vscode-clipper')
+			.get<StatusBarTarget>('statusBarTarget', 'obsidian');
 		this.status.text = `$(layers) Clipper: ${itemCount}`;
-		this.status.tooltip = queueTooltip(this.groups);
+		this.status.command = statusBarCommand(target);
+		this.status.tooltip = `Click to paste to ${target}\n\n${queueTooltip(this.groups)}`;
 	}
 
 	private showError(error: unknown): void {

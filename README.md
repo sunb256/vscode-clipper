@@ -11,6 +11,8 @@ VS Codeで選択したコードをリッチなクリップボード形式のま�
 - AutoHotkey v2
 - Obsidian Desktopと同梱の`copy-path`プラグイン
 
+PowerShellやバッチファイルは使用しません。HTMLとUnicodeテキストのクリップボード操作は、AutoHotkey v2からWindows APIを直接呼び出して行います。
+
 Remote SSHで開いたコードにも対応します。拡張機能はWindows側で実行されるため、VSIXはローカル側へインストールしてください。  
 SSH先へのインストールは不要です。
 
@@ -20,7 +22,7 @@ SSH先へのインストールは不要です。
 2. `Ctrl+Shift+D`（`Clipper: Stack Selection`）で選択範囲を新しいGroupとしてFIFOスタックへ追加します。
 3. 直前のGroupへ追加する場合は`Ctrl+Shift+Alt+D`（`Clipper: Stack Selection in Previous Group`）を使います。
 4. 必要なコードを追加したら、ステータスバーの`Clipper: N`をクリックします。
-5. Obsidianで現在開いているCanvasの既存内容の下へStackが追加され、成功後にStackがクリアされます。
+5. 既定ではObsidianで現在開いているCanvasへStackが追加されます。設定が`draw.io`の場合はdraw.io Desktopへ貼り付けられ、成功後にStackがクリアされます。
 
 `Shift+Alt+D`（`Clipper: Add Selection to Active Obsidian Canvas`）を使うと、Stackへ追加せず、現在の選択範囲をアクティブなObsidian Canvasへ直接追加できます。
 
@@ -35,7 +37,7 @@ Text Nodeの幅はコードの最長行から概算し、400〜1200pxの範囲�
 Canvas名には最初のStack Itemのファイル名を使い、重複時は`-2`、`-3`を付けます。
 単一ファイルだけを開いている場合は、その親フォルダ名をVault内の保存先として自動作成します。
 
-スタックは現在のVS Codeウィンドウ内だけで保持されます。Paste Allが全件成功すると自動的にクリアされ、失敗した場合は再実行できるよう保持されます。ステータスバーへマウスを重ねると、FIFO順の内容とGroup境界を確認できます。
+スタックは現在のVS Codeウィンドウ内だけで保持されます。Paste Allが全件成功すると自動的にクリアされ、失敗した場合は再実行できるよう保持されます。ステータスバーのクリック先は設定でObsidianまたはdraw.ioへ切り替えられます。マウスを重ねると、現在の貼り付け先、FIFO順の内容とGroup境界を確認できます。
 
 ## 設定
 
@@ -44,6 +46,7 @@ Obsidianで追加先のCanvasを開いた状態で実行します。
 
 - `vscode-clipper.autoHotkeyPath`: AutoHotkey v2実行ファイル。空の場合はPATH上の `AutoHotkey64.exe` を使います。
 - `vscode-clipper.drawioExecutable`: draw.ioが起動していない場合に実行する `draw.io.exe` のパス。
+- `vscode-clipper.statusBarTarget`: ステータスバークリック時の貼り付け先。`obsidian`または`draw.io`（既定: `obsidian`）。
 - `vscode-clipper.includeLineNumbers`: パスラベルへ行番号を含めます（既定: true）。
 - `vscode-clipper.includeWorkspaceFolder`: パスへワークスペースフォルダ名を含めます（既定: true）。
 - `vscode-clipper.codeLinkOpenLocation`: コード位置リンクの表示先。`beside`は左側の別ペイン、`current`は現在のペインで開きます（既定: `beside`）。
@@ -56,6 +59,7 @@ Obsidianで追加先のCanvasを開いた状態で実行します。
   // ---------------
   "vscode-clipper.autoHotkeyPath": "C:\\Program Files\\AutoHotkey\\v2\\AutoHotkey64.exe",
   "vscode-clipper.drawioExecutable": "C:\\Users\\<USER>\\AppData\\Local\\Programs\\draw.io\\draw.io.exe",
+  "vscode-clipper.statusBarTarget": "draw.io",
   "vscode-clipper.obsidian.vaultPath": "C:\\Users\\<USER>\\Documents\\Obsidian Vault"
 }
 ```

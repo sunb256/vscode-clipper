@@ -10,6 +10,11 @@ if A_Args[1] = "paste-files" && A_Args.Length >= 4 {
     ExitApp
 }
 
+if A_Args[1] = "read-clipboard" && A_Args.Length >= 3 {
+    ReadClipboard(A_Args[2], A_Args[3])
+    ExitApp
+}
+
 if A_Args[1] = "active-canvas" {
     CopyActiveCanvasPath()
     ExitApp
@@ -99,12 +104,79 @@ EnsureDrawio(window, executable) {
 }
 
 SetClipboard(htmlPath, textPath) {
-    script := A_ScriptDir "\clipboard.ps1"
-    command := "powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File `"" script
-        . "`" -Mode set -HtmlPath `"" htmlPath "`" -TextPath `"" textPath "`""
-    exitCode := RunWait(command, , "Hide")
-    if exitCode != 0 {
-        throw Error("Failed to restore clipboard data")
+    html := FileRead(htmlPath, "UTF-8")
+    text := FileRead(textPath, "UTF-8")
+    htmlFormat := DllCall("RegisterClipboardFormat", "Str", "HTML Format", "UInt")
+    OpenClipboard()
+    try {
+        if !DllCall("EmptyClipboard") {
+            throw Error("Failed to empty the clipboard")
+        }
+        SetClipboardValue(13, text, "UTF-16")
+        SetClipboardValue(htmlFormat, html, "UTF-8")
+    } finally {
+        DllCall("CloseClipboard")
     }
     Sleep(100)
+}
+
+ReadClipboard(htmlPath, textPath) {
+    htmlFormat := DllCall("RegisterClipboardFormat", "Str", "HTML Format", "UInt")
+    html := ReadClipboardValue(htmlFormat, "UTF-8")
+    text := A_Clipboard
+    FileAppend(html, htmlPath, "UTF-8-RAW")
+    FileAppend(text, textPath, "UTF-8-RAW")
+}
+
+ReadClipboardValue(format, encoding) {
+    OpenClipboard()
+    try {
+        if !DllCall("IsClipboardFormatAvailable", "UInt", format) {
+            throw Error("VS Code did not provide HTML clipboard data")
+        }
+        handle := DllCall("GetClipboardData", "UInt", format, "Ptr")
+        pointer := handle ? DllCall("GlobalLock", "Ptr", handle, "Ptr") : 0
+        if !pointer {
+            throw Error("Failed to read clipboard data")
+        }
+        try {
+            return StrGet(pointer, DllCall("GlobalSize", "Ptr", handle, "UPtr"), encoding)
+        } finally {
+            DllCall("GlobalUnlock", "Ptr", handle)
+        }
+    } finally {
+        DllCall("CloseClipboard")
+    }
+}
+
+SetClipboardValue(format, value, encoding) {
+    unitSize := encoding = "UTF-16" ? 2 : 1
+    length := StrPut(value, encoding)
+    handle := DllCall("GlobalAlloc", "UInt", 0x42, "UPtr", length * unitSize, "Ptr")
+    pointer := handle ? DllCall("GlobalLock", "Ptr", handle, "Ptr") : 0
+    if !pointer {
+        if handle {
+            DllCall("GlobalFree", "Ptr", handle)
+        }
+        throw Error("Failed to allocate clipboard data")
+    }
+    try {
+        StrPut(value, pointer, length, encoding)
+    } finally {
+        DllCall("GlobalUnlock", "Ptr", handle)
+    }
+    if !DllCall("SetClipboardData", "UInt", format, "Ptr", handle, "Ptr") {
+        DllCall("GlobalFree", "Ptr", handle)
+        throw Error("Failed to set clipboard data")
+    }
+}
+
+OpenClipboard() {
+    Loop 20 {
+        if DllCall("OpenClipboard", "Ptr", 0) {
+            return
+        }
+        Sleep(25)
+    }
+    throw Error("Clipboard is busy")
 }

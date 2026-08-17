@@ -16,6 +16,7 @@ import {
 	queueTooltip,
 	removePastedItems,
 	selectedLines,
+	statusBarCommand,
 	type StackGroup,
 } from '../extension';
 import {
@@ -84,7 +85,14 @@ suite('Clipper helpers', () => {
 		const config = vscode.workspace.getConfiguration('vscode-clipper');
 		assert.strictEqual(config.get('includeLineNumbers'), true);
 		assert.strictEqual(config.get('includeWorkspaceFolder'), true);
+		assert.strictEqual(config.get('statusBarTarget'), 'obsidian');
 		assert.strictEqual(config.has('obsidian.canvasDirectory'), false);
+	});
+
+	test('maps the status bar target to its paste command', () => {
+		assert.strictEqual(statusBarCommand('obsidian'),
+			'vscode-clipper.appendObsidianCanvas');
+		assert.strictEqual(statusBarCommand('draw.io'), 'vscode-clipper.pasteAll');
 	});
 
 	test('chooses a project directory without requiring a workspace', () => {

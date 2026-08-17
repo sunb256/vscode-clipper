@@ -25,15 +25,15 @@ sequenceDiagram
     participant VSCode as VS Code
     participant Clipper as Clipper
     participant Helper as vscode-clipper.ahk
-    participant PowerShell as clipboard.ps1
+    participant WinAPI as Windows Clipboard API
     participant Drawio as draw.io Desktop
     User->>VSCode: vscode-clipper.pasteAll
     VSCode->>Clipper: pasteAll()
     Clipper->>Clipper: pasteGroups(pending)
     Clipper->>Helper: paste-files
     loop 貼り付け項目
-        Helper->>PowerShell: SetClipboard(...)
-        PowerShell-->>Helper: HTMLとテキストを設定
+        Helper->>WinAPI: HTMLとテキストを設定
+        WinAPI-->>Helper: Clipboard更新完了
         Helper->>Drawio: Ctrl+Shift+A / Ctrl+V
     end
     Clipper-->>User: updateStatus()
@@ -61,9 +61,9 @@ sequenceDiagram
   - [`helper/vscode-clipper.ahk [69-99]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=helper%2Fvscode-clipper.ahk&line=69) — `PasteFiles`, `EnsureDrawio`
 
 - **リッチクリップボードを復元する**
-  - PowerShellが一時ファイルからHTMLとUnicodeテキストをWindowsクリップボードへ同時設定する。
+  - AutoHotkeyがWindows APIを呼び出し、一時ファイルからHTMLとUnicodeテキストをWindowsクリップボードへ同時設定する。
   - [`helper/vscode-clipper.ahk [101-110]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=helper%2Fvscode-clipper.ahk&line=101) — `SetClipboard`
-  - [`helper/clipboard.ps1 [24-29]`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=helper%2Fclipboard.ps1&line=24) — `set` mode
+  - [`helper/vscode-clipper.ahk`](vscode://sunb256.vscode-clipper/open?repo=vscode-clipper&path=helper%2Fvscode-clipper.ahk&line=101) — `SetClipboard`, `SetClipboardValue`
 
 - **成功後の状態を更新する**
   - 全グループの貼り付けが完了した場合だけスタックを空にしてステータス表示を更新する。
