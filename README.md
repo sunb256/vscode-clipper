@@ -1,66 +1,35 @@
 # VS Code Clipper
 
-VS Codeで選択したコードをリッチなクリップボード形式のまま、  
-相対パス・行番号と一緒にdraw.io Desktopへ貼り付ける拡張機能です。
+VS Code の選択コードを、相対パスと行番号付きのリッチテキストとして draw.io Desktop へ貼り付ける Windows 向け拡張機能です。
 
-## 必要なもの
+## 必要環境
 
 - Windows
 - VS Code
 - draw.io Desktop
 - AutoHotkey v2
-- Obsidian Desktopと同梱の`copy-path`プラグイン
 
-PowerShellやバッチファイルは使用しません。HTMLとUnicodeテキストのクリップボード操作は、AutoHotkey v2からWindows APIを直接呼び出して行います。
-
-Remote SSHで開いたコードにも対応します。拡張機能はWindows側で実行されるため、VSIXはローカル側へインストールしてください。  
-SSH先へのインストールは不要です。
 
 ## 使い方
 
-1. VS Codeでコードを選択します。
-2. `Ctrl+Shift+D`（`Clipper: Stack Selection`）で選択範囲を新しいGroupとしてFIFOスタックへ追加します。
-3. 直前のGroupへ追加する場合は`Ctrl+Shift+Alt+D`（`Clipper: Stack Selection in Previous Group`）を使います。
-4. 必要なコードを追加したら、ステータスバーの`Clipper: N`をクリックします。
-5. 既定ではObsidianで現在開いているCanvasへStackが追加されます。設定が`draw.io`の場合はdraw.io Desktopへ貼り付けられ、成功後にStackがクリアされます。
+1. VS Code でコードを選択します。
+2. `Ctrl+Shift+D`（`Clipper: Stack Selection`）で、選択範囲を新しい Group としてスタックします。
+3. 直前の Group に追加する場合は、`Ctrl+Shift+Alt+D`（`Clipper: Stack Selection in Previous Group`）を使います。
+4. ステータスバーの `Clipper: N` をクリックするか、`Clipper: Paste All to draw.io` を実行します。
 
-`Shift+Alt+D`（`Clipper: Add Selection to Active Obsidian Canvas`）を使うと、Stackへ追加せず、現在の選択範囲をアクティブなObsidian Canvasへ直接追加できます。
+`Clipper: Paste Selection to draw.io` は、スタックを経由せず現在の選択範囲だけを貼り付けます。`Clipper: Clear Stack` は未貼り付けの内容を破棄します。
 
-draw.ioへ貼り付ける場合は、コマンドパレットから`Clipper: Paste All to draw.io`または`Clipper: Paste Selection to draw.io`を実行できます。スタックを破棄する場合は、`Clipper: Clear Stack`を実行します。
-
-ステータスバーまたは`Clipper: Add All to Active Obsidian Canvas`を実行すると、AutoHotkeyがObsidianを前面化し、`copy-path`プラグインから現在のCanvasパスを取得します。既存のNodeとEdgeを維持したまま、その下へStackを追加します。追加成功後はStackをクリアし、失敗時は保持します。
-
-`Clipper: Export to Obsidian Canvas`を実行すると、Stack GroupをGroup Node、パス・行番号と各コード片をMarkdownコードブロックのText Nodeとして新しい`.canvas`へ保存します。Edgeは生成せず、Export成功後はStackをクリアします。
-Text Nodeの幅はコードの最長行から概算し、400〜1200pxの範囲で調整されます。
-高さはコードの表示行数から算出し、縦スクロールが発生しないサイズで生成されます。Groupの枠にはラベルを表示しません。
-すべてのStack Groupが1項目だけの場合はGroup枠を生成せず、コードNodeを直接配置します。
-Canvas名には最初のStack Itemのファイル名を使い、重複時は`-2`、`-3`を付けます。
-単一ファイルだけを開いている場合は、その親フォルダ名をVault内の保存先として自動作成します。
-
-スタックは現在のVS Codeウィンドウ内だけで保持されます。Paste Allが全件成功すると自動的にクリアされ、失敗した場合は再実行できるよう保持されます。ステータスバーのクリック先は設定でObsidianまたはdraw.ioへ切り替えられます。マウスを重ねると、現在の貼り付け先、FIFO順の内容とGroup境界を確認できます。
 
 ## 設定
 
-アクティブCanvasへの追加には、`public/obsidian-plugin/copy-path`をObsidianへインストールして有効にしてください。  
-Obsidianで追加先のCanvasを開いた状態で実行します。
-
-- `vscode-clipper.autoHotkeyPath`: AutoHotkey v2実行ファイル。空の場合はPATH上の `AutoHotkey64.exe` を使います。
-- `vscode-clipper.drawioExecutable`: draw.ioが起動していない場合に実行する `draw.io.exe` のパス。
-- `vscode-clipper.statusBarTarget`: ステータスバークリック時の貼り付け先。`obsidian`または`draw.io`（既定: `obsidian`）。
-- `vscode-clipper.includeLineNumbers`: パスラベルへ行番号を含めます（既定: true）。
-- `vscode-clipper.includeWorkspaceFolder`: パスへワークスペースフォルダ名を含めます（既定: true）。
-- `vscode-clipper.codeLinkOpenLocation`: コード位置リンクの表示先。`beside`は左側の別ペイン、`current`は現在のペインで開きます（既定: `beside`）。
-- `vscode-clipper.obsidian.vaultPath`: Obsidian Vaultの絶対パス。Canvas Export時は必須です。
+- `vscode-clipper.autoHotkeyPath`: AutoHotkey v2 実行ファイル。空の場合は PATH 上の `AutoHotkey64.exe` を使います。
+- `vscode-clipper.drawioExecutable`: draw.io が未起動の場合に実行する `draw.io.exe` のパス。
+- `vscode-clipper.includeLineNumbers`: 貼り付けラベルへ行番号を含めます（既定: `true`）。
 
 ```json
 {
-  // ---------------
-  //- plugin vscode clipper
-  // ---------------
   "vscode-clipper.autoHotkeyPath": "C:\\Program Files\\AutoHotkey\\v2\\AutoHotkey64.exe",
-  "vscode-clipper.drawioExecutable": "C:\\Users\\<USER>\\AppData\\Local\\Programs\\draw.io\\draw.io.exe",
-  "vscode-clipper.statusBarTarget": "draw.io",
-  "vscode-clipper.obsidian.vaultPath": "C:\\Users\\<USER>\\Documents\\Obsidian Vault"
+  "vscode-clipper.drawioExecutable": "C:\\Users\\<USER>\\AppData\\Local\\Programs\\draw.io\\draw.io.exe"
 }
 ```
 
@@ -72,20 +41,6 @@ npm run compile
 npm run lint
 npm test
 
-# vsix 作成
+# VSIX 作成
 npx @vscode/vsce package
 ```
-
-Remote SSH利用時は、コマンドパレットの`Developer: Show Running Extensions`で`vscode-clipper`がLocal側に表示されることを確認できます。
-
-## Obsidianからコード位置を開く
-
-`code-mental-model`が出力する`vscode://sunb256.vscode-clipper/open`リンクをObsidianから
-開くと、リンクのプロジェクト名と一致するワークスペースで対象ファイルの開始行へ移動します。
-
-別プロジェクトのVS Codeウィンドウがリンクを受信した場合は、AutoHotkeyがウィンドウタイトルを
-大文字・小文字を区別せず検索し、最初に一致したVS Codeウィンドウへ切り替えてリンクを一度だけ再送します。
-対象プロジェクトは事前登録不要ですが、VS Codeで開かれ、ウィンドウタイトルにプロジェクト名が含まれている必要があります。
-リンク先は既定でMarkdown Previewの左側にあるペインを優先してプレビュータブとして開きます。
-左側にペインがない場合は新規作成して左へ移動し、Markdown Previewを維持します。
-一度作成したコード表示用ペインは以後のリンクで再利用し、リンクごとにペインを増やしません。

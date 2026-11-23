@@ -15,61 +15,7 @@ if A_Args[1] = "read-clipboard" && A_Args.Length >= 3 {
     ExitApp
 }
 
-if A_Args[1] = "active-canvas" {
-    CopyActiveCanvasPath()
-    ExitApp
-}
-
-if A_Args[1] = "focus-vscode" && A_Args.Length >= 3 {
-    FocusVscode(A_Args[2], A_Args[3])
-    ExitApp
-}
-
 ExitApp 2
-
-FocusVscode(project, uri) {
-    target := FindVscodeWindow(project)
-    if !target {
-        throw Error("VS Code project window not found: " project)
-    }
-    WinActivate("ahk_id " target)
-    WinWaitActive("ahk_id " target, , 5)
-    Sleep(150)
-    Run(uri)
-}
-
-FindVscodeWindow(project) {
-    needle := StrLower(project)
-    for window in WinGetList("ahk_exe Code.exe") {
-        if InStr(StrLower(WinGetTitle("ahk_id " window)), needle) {
-            return window
-        }
-    }
-    return 0
-}
-
-CopyActiveCanvasPath() {
-    sourceWindow := WinExist("A")
-    obsidianWindow := "ahk_exe Obsidian.exe"
-    savedClipboard := ClipboardAll()
-    try {
-        if !WinExist(obsidianWindow) {
-            throw Error("Obsidian is not running")
-        }
-        WinActivate(obsidianWindow)
-        WinWaitActive(obsidianWindow, , 5)
-        A_Clipboard := ""
-        Run("obsidian://copy-path")
-        if !ClipWait(5) {
-            throw Error("Copy Path did not copy an active Canvas path")
-        }
-        canvasPath := Trim(A_Clipboard)
-        FileAppend(canvasPath, "*", "UTF-8-RAW")
-    } finally {
-        A_Clipboard := savedClipboard
-        WinActivate("ahk_id " sourceWindow)
-    }
-}
 
 PasteFiles(directory, count, executable) {
     sourceWindow := WinExist("A")

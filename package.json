@@ -3,7 +3,7 @@
   "publisher": "sunb256",
   "displayName": "vscode-clipper",
   "description": "vscode clip to draw.io",
-  "version": "0.6.1",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/sunb256/vscode-clipper.git"
@@ -15,16 +15,12 @@
     "Other"
   ],
   "activationEvents": [
-    "onUri",
     "onStartupFinished",
     "onCommand:vscode-clipper.stackSelection",
     "onCommand:vscode-clipper.stackPreviousGroup",
     "onCommand:vscode-clipper.clipAndPaste",
-    "onCommand:vscode-clipper.clipAndAppendObsidian",
     "onCommand:vscode-clipper.pasteAll",
-    "onCommand:vscode-clipper.clearStack",
-    "onCommand:vscode-clipper.appendObsidianCanvas",
-    "onCommand:vscode-clipper.exportObsidianCanvas"
+    "onCommand:vscode-clipper.clearStack"
   ],
   "extensionKind": [
     "ui"
@@ -45,24 +41,12 @@
         "title": "Clipper: Paste Selection to draw.io"
       },
       {
-        "command": "vscode-clipper.clipAndAppendObsidian",
-        "title": "Clipper: Add Selection to Active Obsidian Canvas"
-      },
-      {
         "command": "vscode-clipper.pasteAll",
         "title": "Clipper: Paste All to draw.io"
       },
       {
         "command": "vscode-clipper.clearStack",
         "title": "Clipper: Clear Stack"
-      },
-      {
-        "command": "vscode-clipper.appendObsidianCanvas",
-        "title": "Clipper: Add All to Active Obsidian Canvas"
-      },
-      {
-        "command": "vscode-clipper.exportObsidianCanvas",
-        "title": "Clipper: Export to Obsidian Canvas"
       }
     ],
     "keybindings": [
@@ -74,11 +58,6 @@
       {
         "command": "vscode-clipper.stackPreviousGroup",
         "key": "ctrl+shift+alt+d",
-        "when": "editorTextFocus && editorHasSelection"
-      },
-      {
-        "command": "vscode-clipper.clipAndAppendObsidian",
-        "key": "shift+alt+d",
         "when": "editorTextFocus && editorHasSelection"
       }
     ],
@@ -95,46 +74,10 @@
           "default": "",
           "description": "Path to draw.io.exe. Used to start draw.io when it is not running."
         },
-        "vscode-clipper.statusBarTarget": {
-          "type": "string",
-          "enum": [
-            "obsidian",
-            "draw.io"
-          ],
-          "enumDescriptions": [
-            "Add the stack to the active Obsidian Canvas.",
-            "Paste the stack into draw.io Desktop."
-          ],
-          "default": "obsidian",
-          "description": "Choose where clicking the Clipper status bar item sends the stack."
-        },
         "vscode-clipper.includeLineNumbers": {
           "type": "boolean",
           "default": true,
           "description": "Include selected line numbers in the pasted path label."
-        },
-        "vscode-clipper.includeWorkspaceFolder": {
-          "type": "boolean",
-          "default": true,
-          "description": "Prefix labels with the workspace folder name."
-        },
-        "vscode-clipper.codeLinkOpenLocation": {
-          "type": "string",
-          "enum": [
-            "beside",
-            "current"
-          ],
-          "enumDescriptions": [
-            "Open code links in a reusable editor group to the left of the current one.",
-            "Open code links in the current editor group."
-          ],
-          "default": "beside",
-          "description": "Choose where code links opened from Markdown or Obsidian are displayed."
-        },
-        "vscode-clipper.obsidian.vaultPath": {
-          "type": "string",
-          "default": "",
-          "description": "Absolute path to the Obsidian vault used for Canvas exports."
 		}
       }
     }

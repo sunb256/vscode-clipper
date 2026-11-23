@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- **Breaking:** Remove all Obsidian, Canvas, and code-link integrations. Clipper is now dedicated to draw.io Desktop.
 - Add Stack Groups with new-group and previous-group capture shortcuts.
 - Paste each Stack Group as one draw.io object.
 - Add an in-memory FIFO stack for selected code snippets.

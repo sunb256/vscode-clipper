@@ -1,4 +1,0 @@
-interface:
-  display_name: "Code Mental Model"
-  short_description: "カテゴリ抽出から連番仕様書とCanvasを一括生成"
-  default_prompt: "Use $code-mental-model to discover this repository's feature categories and generate numbered Markdown and standalone Obsidian Canvas specifications for every category."

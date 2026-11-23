@@ -3,7 +3,6 @@ import * as os from 'os';
 import * as path from 'path';
 import { execFile } from 'child_process';
 import * as vscode from 'vscode';
-import { appendCanvasFile, createCanvas, writeCanvas } from './canvas';
 
 export interface ClipItem {
 	label: string;
@@ -14,70 +13,6 @@ export interface ClipItem {
 }
 
 export type StackGroup = ClipItem[];
-
-export interface CodeLink {
-	repo: string;
-	filePath: string;
-	line: number;
-	fallback: boolean;
-}
-
-export type CodeLinkLocation = 'beside' | 'current';
-export type StatusBarTarget = 'obsidian' | 'draw.io';
-
-export function statusBarCommand(target: StatusBarTarget): string {
-	return target === 'draw.io'
-		? 'vscode-clipper.pasteAll'
-		: 'vscode-clipper.appendObsidianCanvas';
-}
-
-export function codeLinkColumn(
-	location: CodeLinkLocation,
-	remembered?: vscode.ViewColumn,
-	leftColumn?: vscode.ViewColumn,
-): vscode.ViewColumn | undefined {
-	if (location === 'current') {
-		return undefined;
-	}
-	return remembered ?? leftColumn ?? vscode.ViewColumn.Beside;
-}
-
-export function parseCodeLink(uri: vscode.Uri): CodeLink {
-	if (uri.path !== '/open') {
-		throw new Error('Unsupported code link');
-	}
-	const query = new URLSearchParams(uri.query);
-	const repo = query.get('repo')?.trim() ?? '';
-	const filePath = query.get('path')?.trim().replace(/\\/g, '/') ?? '';
-	const line = Number(query.get('line'));
-	if (!repo || !isSafeRelativePath(filePath) || !Number.isInteger(line) || line < 1) {
-		throw new Error('Invalid code link');
-	}
-	return { repo, filePath, line, fallback: query.get('fallback') === '1' };
-}
-
-export function findWorkspace(
-	folders: readonly vscode.WorkspaceFolder[] | undefined,
-	repo: string,
-): vscode.WorkspaceFolder | undefined {
-	return folders?.find((folder) => folder.name.localeCompare(repo, undefined, {
-		sensitivity: 'accent',
-	}) === 0);
-}
-
-function isSafeRelativePath(filePath: string): boolean {
-	if (!filePath || filePath.startsWith('/') || /^[a-zA-Z]:\//.test(filePath)) {
-		return false;
-	}
-	return filePath.split('/').every((part) => part !== '' && part !== '.' && part !== '..');
-}
-
-export function projectName(workspaceName?: string, documentPath?: string): string {
-	const workspace = workspaceName?.trim();
-	if (workspace) { return workspace; }
-	const parent = documentPath ? path.basename(path.dirname(documentPath)).trim() : '';
-	return parent && parent !== '.' ? parent : 'Code Models';
-}
 
 export function clearGroups(groups: StackGroup[]): void {
 	groups.length = 0;
@@ -196,7 +131,6 @@ class Clipper {
 	private readonly groups: StackGroup[] = [];
 	private readonly status: vscode.StatusBarItem;
 	private pasteRunning = false;
-	private codeViewColumn?: vscode.ViewColumn;
 
 	constructor(private readonly context: vscode.ExtensionContext) {
 		this.status = vscode.window.createStatusBarItem(
@@ -210,96 +144,10 @@ class Clipper {
 		this.addCommand('vscode-clipper.stackSelection', () => this.stackSelection(true));
 		this.addCommand('vscode-clipper.stackPreviousGroup', () => this.stackSelection(false));
 		this.addCommand('vscode-clipper.clipAndPaste', () => this.clipAndPaste());
-		this.addCommand('vscode-clipper.clipAndAppendObsidian', () => this.clipAndAppend());
 		this.addCommand('vscode-clipper.pasteAll', () => this.pasteAll());
 		this.addCommand('vscode-clipper.clearStack', () => this.clearStack());
-		this.addCommand('vscode-clipper.appendObsidianCanvas', () => this.appendActiveCanvas());
-		this.addCommand('vscode-clipper.exportObsidianCanvas', () => this.exportCanvas());
-		this.context.subscriptions.push(vscode.window.registerUriHandler({
-			handleUri: (uri) => this.handleUri(uri),
-		}));
-		this.context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
-			if (event.affectsConfiguration('vscode-clipper.statusBarTarget')) {
-				this.updateStatus();
-			}
-		}));
 		this.updateStatus();
 		this.status.show();
-	}
-
-	private async handleUri(uri: vscode.Uri): Promise<void> {
-		try {
-			const link = parseCodeLink(uri);
-			const folder = findWorkspace(vscode.workspace.workspaceFolders, link.repo);
-			if (folder) {
-				await this.openCode(folder, link);
-				return;
-			}
-			if (link.fallback) {
-				throw new Error(`Workspace not found after switching: ${link.repo}`);
-			}
-			this.requireWindows();
-			const retryUri = uri.with({ query: `${uri.query}&fallback=1` }).toString(true);
-			await this.runHelper('focus-vscode', link.repo, retryUri);
-		} catch (error) {
-			this.showError(error);
-		}
-	}
-
-	private async openCode(folder: vscode.WorkspaceFolder, link: CodeLink): Promise<void> {
-		const target = vscode.Uri.joinPath(folder.uri, ...link.filePath.split('/'));
-		try {
-			await vscode.workspace.fs.stat(target);
-		} catch {
-			throw new Error(`Code file not found: ${link.filePath}`);
-		}
-		const document = await vscode.workspace.openTextDocument(target);
-		if (link.line > document.lineCount) {
-			throw new Error(`Line ${link.line} is outside ${link.filePath}`);
-		}
-		const location = vscode.workspace.getConfiguration('vscode-clipper')
-			.get<CodeLinkLocation>('codeLinkOpenLocation', 'beside');
-		if (!this.hasCodeGroup()) {
-			this.codeViewColumn = undefined;
-		}
-		const leftColumn = this.leftGroupColumn();
-		const moveLeft = location === 'beside'
-			&& this.codeViewColumn === undefined && leftColumn === undefined;
-		const editor = await vscode.window.showTextDocument(document, {
-			viewColumn: codeLinkColumn(location, this.codeViewColumn, leftColumn),
-			preview: true,
-		});
-		if (location === 'beside') {
-			if (moveLeft) {
-				await vscode.commands.executeCommand('workbench.action.moveActiveEditorGroupLeft');
-			}
-			this.codeViewColumn = vscode.window.tabGroups.activeTabGroup.viewColumn
-				?? editor.viewColumn;
-		}
-		const position = new vscode.Position(link.line - 1, 0);
-		editor.selection = new vscode.Selection(position, position);
-		editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
-	}
-
-	private hasCodeGroup(): boolean {
-		if (this.codeViewColumn === undefined) {
-			return false;
-		}
-		return vscode.window.tabGroups.all.some(
-			(group) => group.viewColumn === this.codeViewColumn,
-		);
-	}
-
-	private leftGroupColumn(): vscode.ViewColumn | undefined {
-		const activeColumn = vscode.window.tabGroups.activeTabGroup.viewColumn;
-		if (activeColumn === undefined) {
-			return undefined;
-		}
-		return vscode.window.tabGroups.all
-			.map((group) => group.viewColumn)
-			.filter((column): column is vscode.ViewColumn => column !== undefined
-				&& column < activeColumn)
-			.sort((left, right) => right - left)[0];
 	}
 
 	private addCommand(name: string, action: () => Promise<void>): void {
@@ -336,24 +184,6 @@ class Clipper {
 		this.pasteRunning = true;
 		try {
 			await this.pasteItems([item]);
-		} finally {
-			this.pasteRunning = false;
-		}
-	}
-
-	private async clipAndAppend(): Promise<void> {
-		if (!this.isIdle()) {
-			return;
-		}
-		const item = await this.captureSelection();
-		if (!item) {
-			return;
-		}
-		this.pasteRunning = true;
-		try {
-			const destination = await this.activeCanvasPath();
-			await appendCanvasFile(destination, [[item]]);
-			void vscode.window.showInformationMessage(`Clipper: Added to ${destination}`);
 		} finally {
 			this.pasteRunning = false;
 		}
@@ -407,53 +237,6 @@ class Clipper {
 		void vscode.window.setStatusBarMessage('Clipper: Stack cleared', 2000);
 	}
 
-	private async exportCanvas(): Promise<void> {
-		if (this.groups.length === 0) {
-			void vscode.window.showWarningMessage('Clipper: Stack is empty');
-			return;
-		}
-		const vault = this.configValue('obsidian.vaultPath');
-		if (!vault) {
-			throw new Error('Obsidian vault path is not configured');
-		}
-		const workspace = vscode.workspace.workspaceFolders?.[0]?.name;
-		const documentPath = vscode.window.activeTextEditor?.document.uri.fsPath;
-		const project = projectName(workspace, documentPath);
-		const firstLabel = this.groups[0][0].label;
-		const destination = await writeCanvas(
-			vault, project, firstLabel, createCanvas(this.groups),
-		);
-		clearGroups(this.groups);
-		this.updateStatus();
-		void vscode.window.showInformationMessage(`Clipper: Canvas exported to ${destination}`);
-	}
-
-	private async appendActiveCanvas(): Promise<void> {
-		if (!this.canPaste()) {
-			return;
-		}
-		const pending = this.groups.map((group) => [...group]);
-		this.pasteRunning = true;
-		try {
-			const destination = await this.activeCanvasPath();
-			await appendCanvasFile(destination, pending);
-			clearGroups(this.groups);
-			this.updateStatus();
-			void vscode.window.showInformationMessage(`Clipper: Added to ${destination}`);
-		} finally {
-			this.pasteRunning = false;
-		}
-	}
-
-	private async activeCanvasPath(): Promise<string> {
-		this.requireWindows();
-		const destination = (await this.runHelper('active-canvas')).trim();
-		if (!destination) {
-			throw new Error('Copy Path did not return an active Canvas path');
-		}
-		return destination;
-	}
-
 	private async captureSelection(): Promise<ClipItem | undefined> {
 		const editor = this.getEditor();
 		if (!editor) {
@@ -488,9 +271,7 @@ class Clipper {
 	}
 
 	private getRelativePath(uri: vscode.Uri): string {
-		const config = vscode.workspace.getConfiguration('vscode-clipper');
-		const includeFolder = config.get<boolean>('includeWorkspaceFolder', true);
-		return vscode.workspace.asRelativePath(uri, includeFolder).replace(/\\/g, '/');
+		return vscode.workspace.asRelativePath(uri, false).replace(/\\/g, '/');
 	}
 
 	private async readClipboard(): Promise<{ html: string; text: string }> {
@@ -561,11 +342,9 @@ class Clipper {
 
 	private updateStatus(): void {
 		const itemCount = this.groups.reduce((count, group) => count + group.length, 0);
-		const target = vscode.workspace.getConfiguration('vscode-clipper')
-			.get<StatusBarTarget>('statusBarTarget', 'obsidian');
 		this.status.text = `$(layers) Clipper: ${itemCount}`;
-		this.status.command = statusBarCommand(target);
-		this.status.tooltip = `Click to paste to ${target}\n\n${queueTooltip(this.groups)}`;
+		this.status.command = 'vscode-clipper.pasteAll';
+		this.status.tooltip = `Click to paste to draw.io\n\n${queueTooltip(this.groups)}`;
 	}
 
 	private showError(error: unknown): void {
